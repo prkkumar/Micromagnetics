@@ -1,3 +1,4 @@
+###
 n_cell = 128 128 256
 max_grid_size_x = 64
 max_grid_size_y = 64
@@ -80,4 +81,13 @@ integration.rk.type = 2
 ##integration.rk.tableau = 0.0
 
 #integration.sundials.strategy = ERK
+
+## *** Parameters Specific to SUNDIALS ERK Strategy ***
+## (Requires integration.type=SUNDIALS and integration.sundials.strategy=ERK)
+## integration.sundials.erk.method specifies which explicit Runge Kutta method
+## for SUNDIALS to use. The following options are supported:
+## "SSPRK3" = 3rd order strong stability preserving RK (default)
+## "Trapezoid" = 2nd order trapezoidal rule
+## "ForwardEuler" = 1st order forward euler
+## for example:
 #integration.sundials.erk.method = SSPRK3

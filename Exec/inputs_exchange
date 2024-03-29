@@ -1,3 +1,4 @@
+### 
 n_cell = 64 64 64
 max_grid_size_x = 64
 max_grid_size_y = 64
@@ -42,12 +43,12 @@ DMI_coupling = 0
 # INTEGRATION
 
 #TimeIntegratorOption = 1 #Forward Euler
-TimeIntegratorOption = 2 #Predictor-corrector
+#TimeIntegratorOption = 2 #Predictor-corrector
 #TimeIntegratorOption = 3 #2nd order artemis way
-#TimeIntegratorOption = 4 #amrex/sundials backend integrators
+TimeIntegratorOption = 4 #amrex/sundials backend integrators
 
 # tolerance threhold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
-iterative_tolerance = 1.e-9
+#iterative_tolerance = 1.e-9
 
 ## *** Selecting the integrator backend ***
 ## integration.type can take on the following string or int values:
@@ -56,7 +57,7 @@ iterative_tolerance = 1.e-9
 ## "RungeKutta" or "1"   = Native Explicit Runge Kutta
 ## "SUNDIALS" or "2"     = SUNDIALS ARKODE Integrator
 ## for example:
-integration.type = RungeKutta
+integration.type = SUNDIALS
 
 ## *** Parameters Needed For Native Explicit Runge-Kutta ***
 #
@@ -78,5 +79,14 @@ integration.rk.type = 2
 ##integration.rk.nodes = 0
 ##integration.rk.tableau = 0.0
 
-#integration.sundials.strategy = ERK
-#integration.sundials.erk.method = SSPRK3
+integration.sundials.strategy = ERK
+
+## *** Parameters Specific to SUNDIALS ERK Strategy ***
+## (Requires integration.type=SUNDIALS and integration.sundials.strategy=ERK)
+## integration.sundials.erk.method specifies which explicit Runge Kutta method
+## for SUNDIALS to use. The following options are supported:
+## "SSPRK3" = 3rd order strong stability preserving RK (default)
+## "Trapezoid" = 2nd order trapezoidal rule
+## "ForwardEuler" = 1st order forward euler
+## for example:
+integration.sundials.erk.method = SSPRK3
