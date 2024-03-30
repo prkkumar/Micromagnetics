@@ -8,8 +8,6 @@
 #include <AMReX_TimeIntegrator.H>
 #endif
 
-#include <cmath>
-
 using namespace amrex;
 using namespace MagneX;
 
@@ -66,6 +64,17 @@ void main_main ()
     Array<MultiFab, AMREX_SPACEDIM> LLG_RHS;
     Array<MultiFab, AMREX_SPACEDIM> LLG_RHS_pre;
     Array<MultiFab, AMREX_SPACEDIM> LLG_RHS_avg;
+
+    // Initialize variable for reaching equilibrium before evolving Hbias
+    Real normalized_Mx;
+    Real normalized_My;
+    Real normalized_Mz;
+		
+    Real M_magnitude; 
+    Real M_magnitude_old;
+    
+    // Initialize err to some arbitrary value greater then tol
+    Real err = equilibrium_tolerance + 1.;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -275,7 +284,7 @@ void main_main ()
                 CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
             }
         }
-        
+
         if (TimeIntegratorOption == 1) { // first order forward Euler
 
             // Evolve M
@@ -484,7 +493,6 @@ void main_main ()
         bool diag_std4_plot = false;
         if (diag_type == 4 || diag_type == 2 || diag_type == 3) {
             
-	    // Open a file for writing
             Real normalized_Mx = SumNormalizedM(Ms,Mfield[0]);
             Real normalized_My = SumNormalizedM(Ms,Mfield[1]);
             Real normalized_Mz = SumNormalizedM(Ms,Mfield[2]);
@@ -556,6 +564,87 @@ void main_main ()
             WritePlotfile(Ms, Mfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield,
                           H_demagfield, geom, time, step);
         }
+
+        /*
+	
+	If we want to reach equilibrium in M before advancing Hbias, we enter this inner loop.   
+	Different from ferrox in that we need to evolve the whole field to sweep through the Mfield until equilibrium.
+	
+	*/
+
+        if(Hbias_sweep == 1)
+        {
+
+	    if (demag_coupling == 1) {
+		demag_solver.CalculateH_demag(Mfield_old, H_demagfield);
+	    }
+
+	    if (exchange_coupling == 1) {
+		CalculateH_exchange(Mfield_old, H_exchangefield, Ms, exchange, DMI, geom);
+	    }
+
+	    if (DMI_coupling == 1) {
+		CalculateH_DMI(Mfield_old, H_DMIfield, Ms, exchange, DMI, geom);
+	    }
+
+	    if (anisotropy_coupling == 1) {
+		CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
+	    }
+
+           // iterate to compute M^{n+1} until equilibirum reached.
+           while(err > equilibrium_tolerance){
+	
+		    // Evolve M with simple Forward Euler
+		    // Compute f^n = f(M^n, H^n)
+		    Compute_LLG_RHS(LLG_RHS, Mfield_old, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha,
+				    Ms, gamma);
+
+		    // M^{n+1} = M^n + dt * f^n
+		    for (int i = 0; i < 3; i++) {
+			MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
+		    }
+
+		    NormalizeM(Mfield, Ms, geom);
+
+		    normalized_Mx = SumNormalizedM(Ms,Mfield[0])/num_mag;
+                    normalized_My = SumNormalizedM(Ms,Mfield[1])/num_mag;
+                    normalized_Mz = SumNormalizedM(Ms,Mfield[2])/num_mag;
+
+		    outputFile << "time = " << time << " "
+		               << "equilibirate_Sum_normalized_M: "
+		               << normalized_Mx << " "
+		               << normalized_My << " "
+		               << normalized_Mz << std::endl;
+
+                    M_magnitude = sqrt(normalized_Mx*normalized_Mx + normalized_My*normalized_My + normalized_Mz*normalized_Mz);
+                   
+                    err = amrex::Math::abs(M_magnitude_old - M_magnitude);
+
+                    M_magnitude_old = M_magnitude;
+
+		    if (timedependent_alpha) {
+	                ComputeAlpha(alpha,geom,time);
+		    }
+
+		    if (demag_coupling == 1) {
+			demag_solver.CalculateH_demag(Mfield_old, H_demagfield);
+		    }
+
+		    if (exchange_coupling == 1) {
+			CalculateH_exchange(Mfield_old, H_exchangefield, Ms, exchange, DMI, geom);
+		    }
+
+		    if (DMI_coupling == 1) {
+			CalculateH_DMI(Mfield_old, H_DMIfield, Ms, exchange, DMI, geom);
+		    }
+
+		    if (anisotropy_coupling == 1) {
+			CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
+		    }
+            }
+        }
+
+        err = equilibrium_tolerance + 1.;
 
 	// MultiFab memory usage
         const int IOProc = ParallelDescriptor::IOProcessorNumber();
