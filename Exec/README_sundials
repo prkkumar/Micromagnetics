@@ -6,7 +6,7 @@ Installation
 # Download sundials-x.y.z.tar.gz file for SUNDIALS version BEFORE v7.0.0 and extract it at the same level as amrex.
 https://computing.llnl.gov/projects/sundials/sundials-software
 
->> tar -xzvf sundials-x.y.z.tar.gz
+>> tar -xzvf sundials-x.y.z.tar.gz # where x.y.z is the version of sundials
 
 # at the same level that amrex is cloned, do:
 
@@ -16,12 +16,24 @@ https://computing.llnl.gov/projects/sundials/sundials-software
 >> mkdir builddir
 >> cd builddir
 
+######################
+HOST BUILD 
+######################
+
+>> cmake -DCMAKE_INSTALL_PREFIX=/pathto/sundials/instdir -DEXAMPLES_INSTALL_PATH=/pathto/sundials/instdir/examples ../../sundials-x.y.z
 
 ######################
-HOST BUILD
+NVIDIA/CUDA BUILD
 ######################
 
->> cmake -DCMAKE_INSTALL_PREFIX=/pathto/sundials/instdir -DEXAMPLES_INSTALL_PATH=/pathto/sundials/instdir/examples ../../sundials-x.y.z # where x.y.z is the version of sundials
+# Navigate back to the 'sundials' directory and do:
+
+>> mkdir instdir_cuda
+>> cd builddir
+
+>> cmake -DCMAKE_INSTALL_PREFIX=/pathto/sundials/instdir_cuda -DEXAMPLES_INSTALL_PATH=/pathto/sundials/instdir_cuda/examples -DENABLE_CUDA=ON ../../sundials-x.y.z
+
+######################
 
 >> make -j4
 >> make install
@@ -30,9 +42,13 @@ HOST BUILD
 
 >> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/pathto/sundials/instdir/lib/
 
+# and IF you have a NVIDIA/CUDA BUILD
+
+>> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/pathto/sundials/instdir_cuda/lib/
+
 # now you are ready to compile MagneX with:
 
->> make -j4 USE_SUNDIALS=TRUE USE_TIME_INTEGRATOR=TRUE
+>> make -j4 USE_SUNDIALS=TRUE # optional to have 'USE_CUDA=TRUE' as well
 
 # in your inputs file, you will need to have:
 
@@ -55,7 +71,7 @@ integration.type = <pick an option>
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
 ### 4 = RK4 Method
-integration.rk.type = 2
+integration.rk.type = <pick an option>
 
-#integration.sundials.strategy = ERK
+integration.sundials.strategy = ERK
 #integration.sundials.erk.method = SSPRK3
