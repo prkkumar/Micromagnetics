@@ -245,6 +245,12 @@ void main_main ()
     }
 
 #ifdef AMREX_USE_SUNDIALS
+
+    std::string theStrategy;
+    amrex::ParmParse pp("integration.sundials");
+    pp.get("strategy", theStrategy);
+    int using_MRI = theStrategy == "MRI" ? 1 : 0;
+    
     //alias Mfield and Mfield_old from Array<MultiFab, AMREX_SPACEDIM> into a vector of MultiFabs amrex::Vector<MultiFab>
     //This is needed for sundials inetgrator ==> integrator.advance(vMfield_old, vMfield, time, dt)
     amrex::Vector<MultiFab> vMfield_old(AMREX_SPACEDIM);
@@ -303,6 +309,7 @@ void main_main ()
                 MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
             }
 
+            // Normalize M and fill ghost cells
             NormalizeM(Mfield, Ms, geom);
             
         } else if (TimeIntegratorOption == 2) { // iterative predictor-corrector
@@ -339,7 +346,7 @@ void main_main ()
                     MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS_avg[i], 0, 0, 1, 0);
                 }
 
-                // Normalize M
+                // Normalize M and fill ghost cells
                 NormalizeM(Mfield, Ms, geom);
                 
                 for (MFIter mfi(Mfield[0], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
@@ -424,6 +431,7 @@ void main_main ()
 
 #ifdef AMREX_USE_SUNDIALS
             // Create a RHS source function we will integrate
+            // for MRI this represents the slow processes
             auto rhs_fun = [&](Vector<MultiFab>& rhs, const Vector<MultiFab>& state, const Real ) {
                 
                 // User function to calculate the rhs MultiFab given the state MultiFab
@@ -447,16 +455,27 @@ void main_main ()
                     demag_solver.CalculateH_demag(ar_state, H_demagfield);
                 }
 
-                if (exchange_coupling == 1) {
-                    CalculateH_exchange(ar_state, H_exchangefield, Ms, exchange, DMI, geom);
-                }
+                if (using_MRI) {
 
-                if (DMI_coupling == 1) {
-                    CalculateH_DMI(ar_state, H_DMIfield, Ms, exchange, DMI, geom);
-                }
+                    // using MRI, set these processes to zero
+                    for (int d=0; d<AMREX_SPACEDIM; ++d) {
+                        H_exchangefield[d].setVal(0.);
+                        H_DMIfield[d].setVal(0.);
+                        H_anisotropyfield[d].setVal(0.);
+                    }
+                } else {
 
-                if (anisotropy_coupling == 1) {
-                    CalculateH_anisotropy(ar_state, H_anisotropyfield, Ms, anisotropy);
+                    if (exchange_coupling == 1) {
+                        CalculateH_exchange(ar_state, H_exchangefield, Ms, exchange, DMI, geom);
+                    }
+
+                    if (DMI_coupling == 1) {
+                        CalculateH_DMI(ar_state, H_DMIfield, Ms, exchange, DMI, geom);
+                    }
+
+                    if (anisotropy_coupling == 1) {
+                        CalculateH_anisotropy(ar_state, H_anisotropyfield, Ms, anisotropy);
+                    }
                 }
 		
                 // Compute f^n = f(M^n, H^n) 
@@ -512,13 +531,8 @@ void main_main ()
 		                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
 			       			                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
-                // Call user function to update state MultiFab, e.g. fill BCs
+                // Normalize M and fill ghost cells
                 NormalizeM(ar_state, Ms, geom);
-                
-                for (int comp = 0; comp < 3; comp++) {
-                    // fill periodic ghost cells
-                    ar_state[comp].FillBoundary(geom.periodicity());
-                }
             };
 
             // Attach the right hand side and post-update functions
@@ -656,6 +670,7 @@ void main_main ()
 			MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
 		    }
 
+                    // normalize M and fill ghost cells
 		    NormalizeM(Mfield, Ms, geom);
 
 		    normalized_Mx = SumNormalizedM(Ms,Mfield[0])/num_mag;
