@@ -1,17 +1,17 @@
-n_cell = 168 40 1
-max_grid_size_x = 84
-max_grid_size_y = 20
+n_cell = 166 42 1
+max_grid_size_x = 83
+max_grid_size_y = 21
 max_grid_size_z = 1
 
 dt = 5.e-15  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 3
-plot_int = 11
+plot_int = 1
 chk_int = -1
 restart = -1
 diag_type = 4
 
 prob_lo = 0. 0. 0.
-prob_hi = 504.e-9 120.e-9 3.e-9
+prob_hi = 498.e-9 126.e-9 3.e-9
 
 mu0 = 1.25663e-6
 
