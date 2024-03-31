@@ -9,7 +9,7 @@ USE_HIP      = FALSE
 COMP         = gnu
 DIM          = 3
 
-USE_SUNDIALS = TRUE
+USE_SUNDIALS = FALSE
 
 ifeq ($(USE_CUDA),TRUE)
   HEFFTE_HOME ?= ../../heffte/build_cuda
@@ -29,7 +29,11 @@ INCLUDE_LOCATIONS += ../Source
 libraries += -lheffte
 
 ifeq ($(USE_SUNDIALS),TRUE)
-  SUNDIALS_ROOT ?= $(TOP)../../sundials-6.7.0/instdir_cuda
+  ifeq ($(USE_CUDA),TRUE)
+    SUNDIALS_ROOT ?= $(TOP)../../sundials/instdir_cuda
+  else
+    SUNDIALS_ROOT ?= $(TOP)../../sundials/instdir
+  endif
   SUNDIALS_LIB_DIR ?= $(SUNDIALS_ROOT)/lib
 
   USE_CVODE_LIBS ?= TRUE
