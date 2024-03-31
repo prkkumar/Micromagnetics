@@ -72,6 +72,12 @@ void main_main ()
 		
     Real M_magnitude; 
     Real M_magnitude_old;
+
+    //////////////////
+    // FIXME - move these to the namelist
+    Real equilibrium_tolerance = 1.e-6;
+    int Hbias_sweep = 0;
+    //////////////////
     
     // Initialize err to some arbitrary value greater then tol
     Real err = equilibrium_tolerance + 1.;
