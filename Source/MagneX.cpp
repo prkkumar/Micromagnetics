@@ -27,6 +27,9 @@ int MagneX::TimeIntegratorOption;
 // for TimeIntegrationOption=3, iterative_tolerance=0. means force 1 iteration
 amrex::Real MagneX::iterative_tolerance;
 
+// tolerance threshold for equilibrium in M 
+amrex::Real MagneX::equilibrium_tolerance;
+
 // time step
 amrex::Real MagneX::dt;
 
@@ -49,7 +52,12 @@ int MagneX::restart;
 
 // what type of extra diagnostics?
 // 4 = standard problem 4
+// 3 = standard problem 3
+// 2 = standard problem 2
 int MagneX::diag_type;
+
+// Would you like to equilibriate M before evolving Hbias?
+int MagneX::Hbias_sweep;
 
 // permeability
 AMREX_GPU_MANAGED amrex::Real MagneX::mu0;
@@ -116,6 +124,9 @@ void InitializeMagneXNamespace() {
     iterative_tolerance = 1.e-9;
     pp.query("iterative_tolerance",iterative_tolerance);
 
+    equilibrium_tolerance = 1.e-6;
+    pp.query("equilibrium_tolerance",equilibrium_tolerance);
+
     pp.get("dt",dt);
 
     plot_int = -1;
@@ -142,6 +153,9 @@ void InitializeMagneXNamespace() {
 
     diag_type = -1;
     pp.query("diag_type",diag_type);
+
+    Hbias_sweep = 1;
+    pp.query("Hbias_sweep", Hbias_sweep);
 	
     pp.get("mu0",mu0);
 

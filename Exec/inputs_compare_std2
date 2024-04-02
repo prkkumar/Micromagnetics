@@ -1,14 +1,16 @@
+###
 n_cell = 100 20 2   
 max_grid_size_x = 100
 max_grid_size_y = 20
 max_grid_size_z = 2
 
 dt = 5.e-15  # MATLAB code uses 5.e-6 nanoseconds
-nsteps = 100000
+nsteps = 600000
 plot_int = 10000
 chk_int = -1
 restart = -1
-diag_type = 4
+diag_type = 2
+Hbias_sweep = 1
 
 prob_lo = 0. 0. 0.
 prob_hi = 500.e-9 100.e-9 10.e-9
@@ -16,18 +18,18 @@ prob_hi = 500.e-9 100.e-9 10.e-9
 mu0 = 1.25663e-6
 
 Mx_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)"
-My_parser(x,y,z) = "0."
-Mz_parser(x,y,z) = "0."
+My_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)"
+Mz_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)"
 
-# Field Ensemble 1:  mu_0 [Hx= +50mT -> -50mT -> +50mT], mu_0 [Hy= +50mT -> -50mT -> +50mT], mu_0 [Hz= +50mT -> -50mT -> +50mT],
-# which is a field approximately 25 mT, directed 170 degrees counterclockwise from the positive x axis
+# Field Ensemble:  [Hx/Ms= +.08 -> -.08 -> +.08], [Hy/Ms= +.08 -> -.08 -> +.08], mu_0 [Hz/Ms= +.08 -> -.08 -> +.08]
+# which is a field directed about 57 degrees offset from each coordinate axis
 timedependent_Hbias = 1
-Hx_bias_parser(x,y,z,t) = "(t<=3.e-11)*(3.e-11-t)*1.e16"
-Hy_bias_parser(x,y,z,t) = "(t<=3.e-11)*(3.e-11-t)*1.e16"
-Hz_bias_parser(x,y,z,t) = "(t<=3.e-11)*(3.e-11-t)*1.e16"
+Hx_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16"
+Hy_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16"
+Hz_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16" 
 
 timedependent_alpha = 1
-alpha_parser(x,y,z,t) =  " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9) * 0.5"
+alpha_parser(x,y,z,t) =  " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9) * 0.02"
 Ms_parser(x,y,z) =       " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9) * 8.e5"
 gamma_parser(x,y,z) =    " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9) * -1.759e11"
 exchange_parser(x,y,z) = " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)* 1.3e-11"
@@ -53,6 +55,9 @@ TimeIntegratorOption = 1 #Forward Euler
 # tolerance threhold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
 iterative_tolerance = 1.e-9
 
+# tolerance threshold for equilibrium in M (for Hbias_sweep = 1)
+equilibrium_tolerance = 1.e-6
+
 ## *** Selecting the integrator backend ***
 ## integration.type can take on the following string or int values:
 ## (without the quotation marks)
@@ -60,7 +65,7 @@ iterative_tolerance = 1.e-9
 ## "RungeKutta" or "1"   = Native Explicit Runge Kutta
 ## "SUNDIALS" or "2"     = SUNDIALS ARKODE Integrator
 ## for example:
-integration.type = RungeKutta
+integration.type = ForwardEuler
 
 ## *** Parameters Needed For Native Explicit Runge-Kutta ***
 #
@@ -70,7 +75,7 @@ integration.type = RungeKutta
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
 ### 4 = RK4 Method
-integration.rk.type = 2
+integration.rk.type = 1
 
 ## If using a user-specified Butcher Tableau, then
 ## set nodes, weights, and table entries here:

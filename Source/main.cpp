@@ -8,6 +8,8 @@
 #include <AMReX_TimeIntegrator.H>
 #endif
 
+#include <cmath>
+
 using namespace amrex;
 using namespace MagneX;
 
@@ -69,12 +71,21 @@ void main_main ()
     Real normalized_Mx;
     Real normalized_My;
     Real normalized_Mz;
+
+    Real normalized_Mx_old;
+    Real normalized_My_old;
+    Real normalized_Mz_old;
 		
     Real M_magnitude; 
     Real M_magnitude_old;
     
     // Initialize err to some arbitrary value greater then tol
-    Real err = equilibrium_tolerance + 1.;
+    Real err = equilibrium_tolerance + 1.0;
+    Real err_x = equilibrium_tolerance + 1.0;
+    Real err_y = equilibrium_tolerance + 1.0;
+    Real err_z = equilibrium_tolerance + 1.0;
+
+    Real equil_iter = 0;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -503,36 +514,42 @@ void main_main ()
 
             normalized_Mx_prev = normalized_Mx;
   	
-            Real Heff_x = SumHeff(H_demagfield[0], H_exchangefield[0], H_biasfield[0]);
-            Real Heff_y = SumHeff(H_demagfield[1], H_exchangefield[1], H_biasfield[1]);
-            Real Heff_z = SumHeff(H_demagfield[2], H_exchangefield[2], H_biasfield[2]);
 
-	    Real dot_product = (Heff_x*normalized_Mx)/num_mag + (Heff_y*normalized_My)/num_mag + (Heff_z*normalized_Mz)/num_mag;
-	    
 	    outputFile << "time = " << time << " "
                     << "Sum_normalized_M: "
                     << normalized_Mx/num_mag << " "
                     << normalized_My/num_mag << " "
                     << normalized_Mz/num_mag << std::endl;
 
-             outputFile << "time = " << time << " "
+            // standard problem 2 diagnostics
+	    if (diag_type == 2) {
+
+                Real Heff_x = SumHeff(H_demagfield[0], H_exchangefield[0], H_biasfield[0]);
+                Real Heff_y = SumHeff(H_demagfield[1], H_exchangefield[1], H_biasfield[1]);
+                Real Heff_z = SumHeff(H_demagfield[2], H_exchangefield[2], H_biasfield[2]);
+
+	        Real dot_product = (Heff_x*normalized_Mx)/num_mag + (Heff_y*normalized_My)/num_mag + (Heff_z*normalized_Mz)/num_mag;
+	    
+	        outputFile << "time = " << time << " "
                     << "Heff: "
                     << Heff_x/num_mag << " "
                     << Heff_y/num_mag << " "
                     << Heff_z/num_mag << std::endl;
             
-	     outputFile << "time = " << time << " " 
+	        outputFile << "time = " << time << " " 
 		    << "dot_product = " << dot_product << std::endl;
  
 
-             if (dot_product < 0 && dot_product_prev >= 0.){
-	         Real Heff_magn = sqrt(Heff_x*Heff_x + Heff_y*Heff_y + Heff_z*Heff_z);
+                if ((dot_product < 0 && dot_product_prev >= 0.) || (dot_product > 0 && dot_product_prev <=0.)){
+	           Real Heff_magn = sqrt(Heff_x*Heff_x + Heff_y*Heff_y + Heff_z*Heff_z);
 
-		 outputFile << "time = " << time << " "
-                    << "dot_product_zero_magnitude = " << Heff_magn  <<  std::endl;
-	     }	     
-
-	     dot_product_prev = dot_product;
+		   outputFile << "time = " << time << " "
+                              << "dot_product_zero_magnitude = " << Heff_magn  <<  std::endl;
+		
+		}
+               
+	        dot_product_prev = dot_product;
+            }		
 
 	     // standard problem 3 diagnostics
             if (diag_type == 3) {
@@ -553,6 +570,7 @@ void main_main ()
 
         // update time
         time = time + dt;
+	equil_iter = equil_iter + dt;
 
         Real step_stop_time = ParallelDescriptor::second() - step_strt_time;
         ParallelDescriptor::ReduceRealMax(step_stop_time);
@@ -565,11 +583,8 @@ void main_main ()
                           H_demagfield, geom, time, step);
         }
 
-        /*
-	
+        /*	
 	If we want to reach equilibrium in M before advancing Hbias, we enter this inner loop.   
-	Different from ferrox in that we need to evolve the whole field to sweep through the Mfield until equilibrium.
-	
 	*/
 
         if(Hbias_sweep == 1)
@@ -591,60 +606,92 @@ void main_main ()
 		CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
 	    }
 
-           // iterate to compute M^{n+1} until equilibirum reached.
-           while(err > equilibrium_tolerance){
+	    M_magnitude_old = 0.0;
+	    normalized_Mx_old = 0.0;
+	    normalized_My_old = 0.0;
+	    normalized_Mz_old = 0.0;
+
+            // iterate to compute M^{n+1} until equilibirum reached.
+            while((err_x > equilibrium_tolerance) || (err_y > equilibrium_tolerance) || (err_z > equilibrium_tolerance)){
 	
-		    // Evolve M with simple Forward Euler
-		    // Compute f^n = f(M^n, H^n)
-		    Compute_LLG_RHS(LLG_RHS, Mfield_old, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha,
-				    Ms, gamma);
+	        // Evolve M with simple Forward Euler
+		// Compute f^n = f(M^n, H^n)
+		Compute_LLG_RHS(LLG_RHS, Mfield_old, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha,
+		                Ms, gamma);
 
-		    // M^{n+1} = M^n + dt * f^n
-		    for (int i = 0; i < 3; i++) {
-			MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
-		    }
+		// M^{n+1} = M^n + dt * f^n
+		for (int i = 0; i < 3; i++) {
+	 	    MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
+		}
 
-		    NormalizeM(Mfield, Ms, geom);
+                NormalizeM(Mfield, Ms, geom);
+		
+		// copy new solution into old solution
+                for (int comp = 0; comp < 3; comp++) {
+                    MultiFab::Copy(Mfield_old[comp], Mfield[comp], 0, 0, 1, 1);
+                 }
 
-		    normalized_Mx = SumNormalizedM(Ms,Mfield[0])/num_mag;
-                    normalized_My = SumNormalizedM(Ms,Mfield[1])/num_mag;
-                    normalized_Mz = SumNormalizedM(Ms,Mfield[2])/num_mag;
+		equil_iter = equil_iter + dt;
 
-		    outputFile << "time = " << time << " "
-		               << "equilibirate_Sum_normalized_M: "
-		               << normalized_Mx << " "
-		               << normalized_My << " "
-		               << normalized_Mz << std::endl;
+		normalized_Mx = SumNormalizedM(Ms,Mfield[0])/num_mag;
+                normalized_My = SumNormalizedM(Ms,Mfield[1])/num_mag;
+                normalized_Mz = SumNormalizedM(Ms,Mfield[2])/num_mag;
 
-                    M_magnitude = sqrt(normalized_Mx*normalized_Mx + normalized_My*normalized_My + normalized_Mz*normalized_Mz);
+		outputFile << "time = " << equil_iter << " "
+		           << "equilibirate_normalized_M: "
+		           << normalized_Mx << " "
+		           << normalized_My << " "
+		           << normalized_Mz << std::endl;
+
+                M_magnitude = sqrt(normalized_Mx*normalized_Mx + normalized_My*normalized_My + normalized_Mz*normalized_Mz);
                    
-                    err = amrex::Math::abs(M_magnitude_old - M_magnitude);
+                err = amrex::Math::abs(M_magnitude_old - M_magnitude);
 
-                    M_magnitude_old = M_magnitude;
+                err_x = amrex::Math::abs(normalized_Mx - normalized_Mx_old);
+		err_y = amrex::Math::abs(normalized_My - normalized_My_old);
+		err_z = amrex::Math::abs(normalized_Mz - normalized_Mz_old);
 
-		    if (timedependent_alpha) {
-	                ComputeAlpha(alpha,geom,time);
-		    }
+		M_magnitude_old = M_magnitude;
+		normalized_Mx_old = normalized_Mx;
+		normalized_My_old = normalized_My;
+		normalized_Mz_old = normalized_Mz;
 
-		    if (demag_coupling == 1) {
-			demag_solver.CalculateH_demag(Mfield_old, H_demagfield);
-		    }
 
-		    if (exchange_coupling == 1) {
-			CalculateH_exchange(Mfield_old, H_exchangefield, Ms, exchange, DMI, geom);
-		    }
+		if (timedependent_alpha) {
+	            ComputeAlpha(alpha,geom,time);
+		}
 
-		    if (DMI_coupling == 1) {
-			CalculateH_DMI(Mfield_old, H_DMIfield, Ms, exchange, DMI, geom);
-		    }
+		if (demag_coupling == 1) {
+		    demag_solver.CalculateH_demag(Mfield_old, H_demagfield);
+		}
 
-		    if (anisotropy_coupling == 1) {
-			CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
-		    }
+	        if (exchange_coupling == 1) {
+		    CalculateH_exchange(Mfield_old, H_exchangefield, Ms, exchange, DMI, geom);
+		}
+
+		if (DMI_coupling == 1) {
+		    CalculateH_DMI(Mfield_old, H_DMIfield, Ms, exchange, DMI, geom);
+		}
+
+		if (anisotropy_coupling == 1) {
+		    CalculateH_anisotropy(Mfield_old, H_anisotropyfield, Ms, anisotropy);
+             	}
+
             }
-        }
 
-        err = equilibrium_tolerance + 1.;
+            // Diagnostic for when we switch the Hbias
+	    outputFile << "time = " << equil_iter << " "
+                           << "switch!: "
+                           << normalized_Mx << " "
+                           << normalized_My << " "
+                           << normalized_Mz << std::endl;
+		
+            // Reset the error before exiting the equilibrium loop
+	    err = equilibrium_tolerance + 1.;
+            err_x = equilibrium_tolerance + 1.;
+            err_y = equilibrium_tolerance + 1.;
+	    err_z = equilibrium_tolerance + 1.;
+	}
 
 	// MultiFab memory usage
         const int IOProc = ParallelDescriptor::IOProcessorNumber();

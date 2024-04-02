@@ -20,10 +20,13 @@ namespace MagneX {
     // 4 = AMReX and SUNDIALS integrators
     extern int TimeIntegratorOption;
 
-    // tolerance threhold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
+    // tolerance threshold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
     // for TimeIntegrationOption=2, iterative_tolerance=0. means force 2 iterations
     // for TimeIntegrationOption=3, iterative_tolerance=0. means force 1 iteration
     extern amrex::Real iterative_tolerance;
+
+    // tolerance threshold for equilibrium in M
+    extern amrex::Real equilibrium_tolerance;
 
     // time step
     extern amrex::Real dt;
@@ -48,6 +51,9 @@ namespace MagneX {
     // what type of extra diagnostics?
     // 4 = standard problem 4
     extern int diag_type;
+
+    // Would you like to equilibriate M before evolving Hbias?
+    extern int Hbias_sweep;
 
     // permeability
     extern AMREX_GPU_MANAGED amrex::Real mu0;
