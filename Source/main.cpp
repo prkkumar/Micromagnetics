@@ -78,6 +78,12 @@ void main_main ()
 		
     Real M_magnitude; 
     Real M_magnitude_old;
+
+    //////////////////
+    // FIXME - move these to the namelist
+    Real equilibrium_tolerance = 1.e-6;
+    int Hbias_sweep = 0;
+    //////////////////
     
     // Initialize err to some arbitrary value greater then tol
     Real err = equilibrium_tolerance + 1.0;
@@ -250,6 +256,12 @@ void main_main ()
     }
 
 #ifdef AMREX_USE_SUNDIALS
+
+    std::string theStrategy;
+    amrex::ParmParse pp("integration.sundials");
+    pp.get("strategy", theStrategy);
+    int using_MRI = theStrategy == "MRI" ? 1 : 0;
+    
     //alias Mfield and Mfield_old from Array<MultiFab, AMREX_SPACEDIM> into a vector of MultiFabs amrex::Vector<MultiFab>
     //This is needed for sundials inetgrator ==> integrator.advance(vMfield_old, vMfield, time, dt)
     amrex::Vector<MultiFab> vMfield_old(AMREX_SPACEDIM);
@@ -308,6 +320,7 @@ void main_main ()
                 MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS[i], 0, 0, 1, 0);
             }
 
+            // Normalize M and fill ghost cells
             NormalizeM(Mfield, Ms, geom);
             
         } else if (TimeIntegratorOption == 2) { // iterative predictor-corrector
@@ -344,7 +357,7 @@ void main_main ()
                     MultiFab::LinComb(Mfield[i], 1.0, Mfield_old[i], 0, dt, LLG_RHS_avg[i], 0, 0, 1, 0);
                 }
 
-                // Normalize M
+                // Normalize M and fill ghost cells
                 NormalizeM(Mfield, Ms, geom);
                 
                 for (MFIter mfi(Mfield[0], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
@@ -429,44 +442,97 @@ void main_main ()
 
 #ifdef AMREX_USE_SUNDIALS
             // Create a RHS source function we will integrate
-            auto source_fun = [&](Vector<MultiFab>& rhs, const Vector<MultiFab>& old_state, const Real ) {
+            // for MRI this represents the slow processes
+            auto rhs_fun = [&](Vector<MultiFab>& rhs, const Vector<MultiFab>& state, const Real ) {
                 
                 // User function to calculate the rhs MultiFab given the state MultiFab
                 for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
                     rhs[idim].setVal(0.);
                 } 
 
-	        //alias rhs and old_state from vector of MultiFabs amrex::Vector<MultiFab> into Array<MultiFab, AMREX_SPACEDIM>
+	        //alias rhs and state from vector of MultiFabs amrex::Vector<MultiFab> into Array<MultiFab, AMREX_SPACEDIM>
 		//This is needed since CalculateH_* and Compute_LLG_RHS function take Array<MultiFab, AMREX_SPACEDIM> as input param
 
                 Array<MultiFab, AMREX_SPACEDIM> ar_rhs{AMREX_D_DECL(MultiFab(rhs[0],amrex::make_alias,0,rhs[0].nComp()),
 		                                                    MultiFab(rhs[1],amrex::make_alias,0,rhs[1].nComp()),
 			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
 
-                Array<MultiFab, AMREX_SPACEDIM> ar_old_state{AMREX_D_DECL(MultiFab(old_state[0],amrex::make_alias,0,old_state[0].nComp()),
-		                                                          MultiFab(old_state[1],amrex::make_alias,0,old_state[1].nComp()),
-			       			                          MultiFab(old_state[2],amrex::make_alias,0,old_state[2].nComp()))};
+                Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
+		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
     	        // Evolve H_demag
                 if (demag_coupling == 1) {
-                    demag_solver.CalculateH_demag(ar_old_state, H_demagfield);
+                    demag_solver.CalculateH_demag(ar_state, H_demagfield);
+                }
+
+                if (using_MRI) {
+
+                    // using MRI, set these processes to zero
+                    for (int d=0; d<AMREX_SPACEDIM; ++d) {
+                        H_exchangefield[d].setVal(0.);
+                        H_DMIfield[d].setVal(0.);
+                        H_anisotropyfield[d].setVal(0.);
+                    }
+                } else {
+
+                    if (exchange_coupling == 1) {
+                        CalculateH_exchange(ar_state, H_exchangefield, Ms, exchange, DMI, geom);
+                    }
+
+                    if (DMI_coupling == 1) {
+                        CalculateH_DMI(ar_state, H_DMIfield, Ms, exchange, DMI, geom);
+                    }
+
+                    if (anisotropy_coupling == 1) {
+                        CalculateH_anisotropy(ar_state, H_anisotropyfield, Ms, anisotropy);
+                    }
+                }
+		
+                // Compute f^n = f(M^n, H^n) 
+                Compute_LLG_RHS(ar_rhs, ar_state, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha, Ms, gamma);
+            };
+
+            // Create a fast RHS source function we will integrate
+            auto rhs_fast_fun = [&](Vector<MultiFab>& rhs, const Vector<MultiFab>& stage_data, const Vector<MultiFab>& state, const Real ) {
+                
+                // User function to calculate the rhs MultiFab given the state MultiFab
+                for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
+                    rhs[idim].setVal(0.);
+                } 
+
+	        //alias rhs and state from vector of MultiFabs amrex::Vector<MultiFab> into Array<MultiFab, AMREX_SPACEDIM>
+		//This is needed since CalculateH_* and Compute_LLG_RHS function take Array<MultiFab, AMREX_SPACEDIM> as input param
+
+                Array<MultiFab, AMREX_SPACEDIM> ar_rhs{AMREX_D_DECL(MultiFab(rhs[0],amrex::make_alias,0,rhs[0].nComp()),
+		                                                    MultiFab(rhs[1],amrex::make_alias,0,rhs[1].nComp()),
+			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
+
+                Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
+		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
+
+    	        // fast RHS does not have demag
+                if (demag_coupling == 1) {
+                    for (int d=0; d<AMREX_SPACEDIM; ++d) {
+                        H_demagfield[d].setVal(0.);
+                    }
                 }
 
                 if (exchange_coupling == 1) {
-                    CalculateH_exchange(ar_old_state, H_exchangefield, Ms, exchange, DMI, geom);
+                    CalculateH_exchange(ar_state, H_exchangefield, Ms, exchange, DMI, geom);
                 }
 
                 if (DMI_coupling == 1) {
-                    CalculateH_DMI(ar_old_state, H_DMIfield, Ms, exchange, DMI, geom);
+                    CalculateH_DMI(ar_state, H_DMIfield, Ms, exchange, DMI, geom);
                 }
 
                 if (anisotropy_coupling == 1) {
-                    CalculateH_anisotropy(ar_old_state, H_anisotropyfield, Ms, anisotropy);
+                    CalculateH_anisotropy(ar_state, H_anisotropyfield, Ms, anisotropy);
                 }
-
 		
                 // Compute f^n = f(M^n, H^n) 
-                Compute_LLG_RHS(ar_rhs, ar_old_state, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha, Ms, gamma);
+                Compute_LLG_RHS(ar_rhs, ar_state, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha, Ms, gamma);
             };
 
             // Create a function to call after updating a state
@@ -476,19 +542,19 @@ void main_main ()
 		                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
 			       			                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
-                // Call user function to update state MultiFab, e.g. fill BCs
+                // Normalize M and fill ghost cells
                 NormalizeM(ar_state, Ms, geom);
-                
-                for (int comp = 0; comp < 3; comp++) {
-                    // fill periodic ghost cells
-                    ar_state[comp].FillBoundary(geom.periodicity());
-                }
             };
 
             // Attach the right hand side and post-update functions
             // to the integrator
-            integrator.set_rhs(source_fun);
+            integrator.set_rhs(rhs_fun);
+            integrator.set_fast_rhs(rhs_fast_fun);
             integrator.set_post_update(post_update_fun);
+
+            // This sets the ratio of slow timestep size to fast timestep size as an integer,
+            // or equivalently, the number of fast timesteps per slow timestep.
+            integrator.set_slow_fast_timestep_ratio(10);
                 
             // integrate forward one step from `time` by `dt` to fill S_new
             integrator.advance(vMfield_old, vMfield, time, dt);

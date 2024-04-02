@@ -4,12 +4,12 @@ AMREX_HOME ?= ../../amrex
 DEBUG        = FALSE
 USE_MPI      = TRUE
 USE_OMP      = FALSE
-USE_CUDA     = TRUE
+USE_CUDA     = FALSE
 USE_HIP      = FALSE
 COMP         = gnu
 DIM          = 3
 
-USE_SUNDIALS = TRUE
+USE_SUNDIALS = FALSE
 
 ifeq ($(USE_CUDA),TRUE)
   HEFFTE_HOME ?= ../../heffte/build_cuda
