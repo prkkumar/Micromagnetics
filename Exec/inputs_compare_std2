@@ -52,8 +52,11 @@ TimeIntegratorOption = 1 #Forward Euler
 #TimeIntegratorOption = 3 #2nd order artemis way
 #TimeIntegratorOption = 4 #amrex/sundials backend integrators
 
-# tolerance threhold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
+# tolerance threshold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
 iterative_tolerance = 1.e-9
+
+# tolerance for equilibrium in M when Hbias_sweep = 1
+equilibrium_tolerance = 1.e-6
 
 ## amrex/sundials backend integrators
 ## *** Selecting the integrator backend ***
@@ -62,7 +65,7 @@ iterative_tolerance = 1.e-9
 ## "ForwardEuler" or "0" = Native Forward Euler Integrator
 ## "RungeKutta" or "1"   = Native Explicit Runge Kutta controlled by integration.rk.type
 ## "SUNDIALS" or "2"     = SUNDIALS Integrators controlled by integration.sundials.strategy
-integration.type = RungeKutta
+integration.type = ForwardEuler
 
 ## *** Parameters Needed For Native Explicit Runge-Kutta ***
 #
@@ -72,7 +75,7 @@ integration.type = RungeKutta
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
 ### 4 = RK4 Method
-integration.rk.type = 3
+integration.rk.type = 1
 
 ## If using a user-specified Butcher Tableau, then
 ## set nodes, weights, and table entries here:
@@ -80,9 +83,9 @@ integration.rk.type = 3
 ## The Butcher Tableau is read as a flattened,
 ## lower triangular matrix (but including the diagonal)
 ## in row major format.
-integration.rk.weights = 1
-integration.rk.nodes = 0
-integration.rk.tableau = 0.0
+#integration.rk.weights = 1
+#integration.rk.nodes = 0
+#integration.rk.tableau = 0.0
 
 ## *** Parameters Needed For SUNDIALS Integrators ***
 ## integration.sundials.strategy specifies which ARKODE strategy to use.
@@ -91,7 +94,7 @@ integration.rk.tableau = 0.0
 ## "MRI" = Multirate Integrator
 ## "MRITEST" = Tests the Multirate Integrator by setting a zero-valued fast RHS function
 ## for example:
-integration.sundials.strategy = ERK
+#integration.sundials.strategy = ERK
 
 ## *** Parameters Specific to SUNDIALS ERK Strategy ***
 ## (Requires integration.type=SUNDIALS and integration.sundials.strategy=ERK)
@@ -101,7 +104,7 @@ integration.sundials.strategy = ERK
 ## "Trapezoid" = 2nd order trapezoidal rule
 ## "ForwardEuler" = 1st order forward euler
 ## for example:
-integration.sundials.erk.method = SSPRK3
+#integration.sundials.erk.method = SSPRK3
 
 ## *** Parameters Specific to SUNDIALS MRI Strategy ***
 ## (Requires integration.type=SUNDIALS and integration.sundials.strategy=MRI)
@@ -113,7 +116,7 @@ integration.sundials.erk.method = SSPRK3
 ## "Trapezoid" = 2nd order trapezoidal rule
 ## "ForwardEuler" = 1st order forward euler (default for inner method)
 ## for example:
-integration.sundials.mri.implicit_inner = false
-integration.sundials.mri.outer_method = KnothWolke3
-integration.sundials.mri.inner_method = Trapezoid
+#integration.sundials.mri.implicit_inner = false
+#integration.sundials.mri.outer_method = KnothWolke3
+#integration.sundials.mri.inner_method = Trapezoid
 
