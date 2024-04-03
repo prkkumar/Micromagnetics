@@ -28,6 +28,9 @@ namespace MagneX {
     // tolerance threshold for equilibrium in M
     extern amrex::Real equilibrium_tolerance;
 
+    // increment size for Hbias
+    extern AMREX_GPU_MANAGED amrex::Real increment_size;
+
     // time step
     extern amrex::Real dt;
 

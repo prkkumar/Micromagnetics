@@ -5,7 +5,8 @@ max_grid_size_y = 20
 max_grid_size_z = 2
 
 dt = 5.e-15  # MATLAB code uses 5.e-6 nanoseconds
-nsteps = 600000
+nsteps = 800000
+nsteps_hysteresis = 20 # Must = 2*(H_bias/increment_size)
 plot_int = 10000
 chk_int = -1
 restart = -1
@@ -21,12 +22,12 @@ Mx_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-
 My_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)"
 Mz_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9)"
 
-# Field Ensemble:  [Hx/Ms= +.08 -> -.08 -> +.08], [Hy/Ms= +.08 -> -.08 -> +.08], mu_0 [Hz/Ms= +.08 -> -.08 -> +.08]
+# Field Ensemble for hysteresis:  [Hx/Ms= +.08 -> -.08 -> +.08], [Hy/Ms= +.08 -> -.08 -> +.08], mu_0 [Hz/Ms= +.08 -> -.08 -> +.08]
 # which is a field directed about 57 degrees offset from each coordinate axis
 timedependent_Hbias = 1
-Hx_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16"
-Hy_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16"
-Hz_bias_parser(x,y,z,t) = "(t<=10.e-9)*(6.4e-12-(t*150))*1.e16" 
+Hx_bias_parser(x,y,z,t) = "(t<=10.e-9)*6.4e-12*1.e16"
+Hy_bias_parser(x,y,z,t) = "(t<=10.e-9)*6.4e-12*1.e16"
+Hz_bias_parser(x,y,z,t) = "(t<=10.e-9)*6.4e-12*1.e16" 
 
 timedependent_alpha = 1
 alpha_parser(x,y,z,t) =  " (x>0.)*(x<500.e-9)*(y>0.)*(y<100.e-9)*(z>0.)*(z<10.e-9) * 0.02"
@@ -45,6 +46,13 @@ anisotropy_coupling = 0
 anisotropy_axis = 1.0 1.0 1.0
 DMI_coupling = 0
 
+# tolerance for equilibrium in M when Hbias_sweep = 1
+equilibrium_tolerance = 1.e-6
+
+# size of increment for Hbias after equilibrium reached when Hbias_sweep = 1
+# for standard problem 2 we step the field from H = 64,000 -> H= -64,000 in 4,000 steps 
+increment_size = 6400
+
 # INTEGRATION
 
 TimeIntegratorOption = 1 #Forward Euler
@@ -54,9 +62,6 @@ TimeIntegratorOption = 1 #Forward Euler
 
 # tolerance threshold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
 iterative_tolerance = 1.e-9
-
-# tolerance for equilibrium in M when Hbias_sweep = 1
-equilibrium_tolerance = 1.e-6
 
 ## amrex/sundials backend integrators
 ## *** Selecting the integrator backend ***
@@ -119,4 +124,3 @@ integration.rk.type = 1
 #integration.sundials.mri.implicit_inner = false
 #integration.sundials.mri.outer_method = KnothWolke3
 #integration.sundials.mri.inner_method = Trapezoid
-

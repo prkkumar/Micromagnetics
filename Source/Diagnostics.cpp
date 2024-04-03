@@ -136,7 +136,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-		return {-(anisotropy) * std::pow((Mx(i,j,k)*anisotropy_axis[0] + My(i,j,k)*anisotropy_axis[1] + Mz(i,j,k)*anisotropy_axis[2]), 2)};
+		return {-(anisotropy) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
             } else {
                 return {0.};
             }
@@ -148,4 +148,3 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
     return sum;
 }
-

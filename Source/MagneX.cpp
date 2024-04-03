@@ -22,13 +22,16 @@ int MagneX::nsteps;
 // 4 = AMReX and SUNDIALS integrators
 int MagneX::TimeIntegratorOption;
 
-// tolerance threhold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
+// tolerance threshold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
 // for TimeIntegrationOption=2, iterative_tolerance=0. means force 2 iterations
 // for TimeIntegrationOption=3, iterative_tolerance=0. means force 1 iteration
 amrex::Real MagneX::iterative_tolerance;
 
 // tolerance threshold for equilibrium in M 
 amrex::Real MagneX::equilibrium_tolerance;
+
+// increment size for Hbias  
+AMREX_GPU_MANAGED amrex::Real MagneX::increment_size;
 
 // time step
 amrex::Real MagneX::dt;
@@ -119,13 +122,16 @@ void InitializeMagneXNamespace() {
 
     pp.get("nsteps",nsteps);
 
+    equilibrium_tolerance = 1.e-6;
+    pp.query("equilibrium_tolerance",equilibrium_tolerance);
+
+    increment_size = 1.e-5;
+    pp.query("increment_size",increment_size);
+
     pp.get("TimeIntegratorOption",TimeIntegratorOption);
 
     iterative_tolerance = 1.e-9;
     pp.query("iterative_tolerance",iterative_tolerance);
-
-    equilibrium_tolerance = 1.e-6;
-    pp.query("equilibrium_tolerance",equilibrium_tolerance);
 
     pp.get("dt",dt);
 
