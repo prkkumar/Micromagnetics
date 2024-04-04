@@ -85,7 +85,7 @@ void main_main ()
     int increment_Hbias = 0;
 
     // Changes -1 when we want to reverse Hbias
-    int sign = 1;
+    int sign = -1;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -299,9 +299,9 @@ void main_main ()
 
 	       amrex::ParallelFor( bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
 	       {
-	           Hx_bias(i,j,k) += increment_size;
-	           Hy_bias(i,j,k) += increment_size;
-	           Hz_bias(i,j,k) += increment_size;
+	           Hx_bias(i,j,k) += sign*increment_size;
+	           Hy_bias(i,j,k) += sign*increment_size;
+	           Hz_bias(i,j,k) += sign*increment_size;
 
 
 		});
