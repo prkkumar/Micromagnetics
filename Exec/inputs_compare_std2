@@ -80,7 +80,7 @@ integration.type = RungeKutta
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
 ### 4 = RK4 Method
-integration.rk.type = 1
+integration.rk.type = 3
 
 ## If using a user-specified Butcher Tableau, then
 ## set nodes, weights, and table entries here:
