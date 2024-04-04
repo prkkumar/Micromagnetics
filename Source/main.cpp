@@ -279,9 +279,11 @@ void main_main ()
 
         if ((Hbias_sweep == 1) && (increment_Hbias == 1)) {
 	   // We save the value of the initial Hbias so we know when to reverse the field
+           /*
 	   if (hysteresis_iter == 1){
                
 	   }
+           */
 
 	   for (MFIter mfi(H_biasfield[0]); mfi.isValid(); ++mfi)
            {
