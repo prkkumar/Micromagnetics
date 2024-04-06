@@ -14,6 +14,9 @@ namespace MagneX {
     // total steps in simulation
     extern int nsteps;
 
+    // number of increments on Hbias before reversing sign of increment
+    extern int nsteps_hysteresis;
+
     // 1 = first order forward Euler
     // 2 = iterative predictor-corrector
     // 3 = iterative direct solver

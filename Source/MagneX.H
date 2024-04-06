@@ -72,6 +72,9 @@ Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_z,
                       Real anisotropy);
 
+Real SumHbias(MultiFab& H_biasfield,
+	      MultiFab& Ms);
+
 /*
   EffectiveAnisotropyField.cpp
 */

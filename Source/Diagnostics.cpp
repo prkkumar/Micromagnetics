@@ -108,6 +108,43 @@ Real SumHeff(MultiFab& H_demagfield,
     return sum;
 }
 
+Real SumHbias(MultiFab& H_biasfield,
+	      MultiFab& Ms)
+{
+    // timer for profiling
+    BL_PROFILE_VAR("SumNormalizedM()",SumNormalizedM);
+
+    ReduceOps<ReduceOpSum> reduce_op;
+    
+    ReduceData<Real> reduce_data(reduce_op);
+
+    using ReduceTuple = typename decltype(reduce_data)::Type;
+
+    for (MFIter mfi(H_biasfield,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        const Box& bx = mfi.tilebox();
+
+        // extract field data
+        auto const& H_bias = H_biasfield.array(mfi);
+        auto const& fab = Ms.array(mfi);
+
+        reduce_op.eval(bx, reduce_data,
+                       [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+        {
+	    if (fab(i,j,k)> 0.){
+                return {H_bias(i,j,k)/fab(i,j,k)};
+            } else {
+                return {0.};
+	    }
+	});
+    }
+
+    Real sum = amrex::get<0>(reduce_data.value());
+    ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}
+
 Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_x,
                       MultiFab& Mfield_y,

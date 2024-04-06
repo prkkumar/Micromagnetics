@@ -6,7 +6,7 @@ max_grid_size_z = 2
 
 dt = 1.e-13  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 100000000
-nsteps_hysteresis = 20 # Must = 2*(H_bias/increment_size)
+nsteps_hysteresis = 100 # Must = 2*(H_bias/increment_size)
 plot_int = 100000
 chk_int = -1
 restart = -1
@@ -51,7 +51,7 @@ equilibrium_tolerance = 1.e-6
 
 # size of increment for Hbias after equilibrium reached when Hbias_sweep = 1
 # for standard problem 2 we step the field from H = 64,000 -> H= -64,000 in 4,000 steps 
-increment_size = 6400
+increment_size = 1280
 
 # INTEGRATION
 

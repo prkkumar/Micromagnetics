@@ -36,7 +36,7 @@ void main_main ()
 
     Real total_step_strt_time = ParallelDescriptor::second();
   
-    std::ofstream outputFile("output.txt", std::ofstream::trunc);
+    std::ofstream outputFile("Diagnostics.txt", std::ofstream::trunc);
 
     // **********************************
     // READ SIMULATION PARAMETERS
@@ -84,8 +84,15 @@ void main_main ()
 
     int increment_Hbias = 0;
 
-    // Changes -1 when we want to reverse Hbias
+    Real Hbias_magn;
+    Real M;
+    Real M_old;
+    
+    // Changes to +1 when we want to reverse Hbias trend
     int sign = -1;
+
+    // Count how many times we have incremented Hbias
+    int increment_count = 0;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -278,13 +285,22 @@ void main_main ()
         }
 
         if ((Hbias_sweep == 1) && (increment_Hbias == 1)) {
-	   // We save the value of the initial Hbias so we know when to reverse the field
-           /*
-	   if (hysteresis_iter == 1){
-               
-	   }
-           */
+           
+           increment_count += 1;
+	   if (increment_count == nsteps_hysteresis) {
+	       sign *= -1;
+               outputFile << "time = " << time << " "
+                    << "Reverse_Hbias_evolution "
+                    << normalized_Mx/num_mag << " "
+                    << normalized_My/num_mag << " "
+                    << normalized_Mz/num_mag << std::endl;
+	   }	   
 
+	   // If we have completed the hysteresis loop, we end the simulation
+	   if (increment_count == 2*nsteps_hysteresis) {
+	       step = nsteps;
+	   }
+	   
 	   for (MFIter mfi(H_biasfield[0]); mfi.isValid(); ++mfi)
            {
                const Box& bx = mfi.tilebox();
@@ -302,8 +318,6 @@ void main_main ()
 	           Hx_bias(i,j,k) += sign*increment_size;
 	           Hy_bias(i,j,k) += sign*increment_size;
 	           Hz_bias(i,j,k) += sign*increment_size;
-
-
 		});
 	    }
 
@@ -605,7 +619,7 @@ void main_main ()
             amrex::Abort("Time integrator order not recognized");
         }
 
-        // standard problem 4 diagnostics
+        // standard problem diagnostics
         bool diag_std4_plot = false;
         if (diag_type == 4 || diag_type == 2 || diag_type == 3) {
             
@@ -657,35 +671,38 @@ void main_main ()
 
             // standard problem 2 diagnostics
 	    if (diag_type == 2) {
+                Real Hbias_x = SumHbias(H_biasfield[0],Ms)/num_mag;
+                Real Hbias_y = SumHbias(H_biasfield[1],Ms)/num_mag;
+                Real Hbias_z = SumHbias(H_biasfield[2],Ms)/num_mag;
 
-                Real Heff_x = SumHeff(H_demagfield[0], H_exchangefield[0], H_biasfield[0]);
-                Real Heff_y = SumHeff(H_demagfield[1], H_exchangefield[1], H_biasfield[1]);
-                Real Heff_z = SumHeff(H_demagfield[2], H_exchangefield[2], H_biasfield[2]);
+                M = (normalized_Mx/num_mag) + (normalized_My/num_mag) + (normalized_Mz/num_mag);
 
-	        Real dot_product = normalized_Mx/num_mag + normalized_My/num_mag + normalized_Mz/num_mag;
-	    
-	        outputFile << "time = " << time << " "
-                    << "Heff: "
-                    << Heff_x/num_mag << " "
-                    << Heff_y/num_mag << " "
-                    << Heff_z/num_mag << std::endl;
+                if((M_old > 0 && M <= 0.) || (M_old < 0 && M >= 0.)){
+	            outputFile << "time = " << time << " "
+                               << "Coercivity = " << M <<  std::endl;  	    
+	         } 
+
+                M_old = M;
+
+	        //if (increment_Hbias == 1){ 	
+	            outputFile << "time = " << time << " "
+                               << "M/Ms = " << M <<  std::endl;
+	        //}  
             
-	        outputFile << "time = " << time << " " 
-		    << "dot_product = " << dot_product << std::endl;
- 
+	        if (Hbias_x < 0) {
+	            Hbias_magn = -sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
+                }
+	        else {
+                    Hbias_magn = sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
+	        }
 
-                if ((dot_product < 0 && dot_product_prev >= 0.) || (dot_product > 0 && dot_product_prev <=0.)){
-	           Real Heff_magn = sqrt(Heff_x*Heff_x + Heff_y*Heff_y + Heff_z*Heff_z);
-
-		   outputFile << "time = " << time << " "
-                              << "dot_product_zero_magnitude = " << Heff_magn  <<  std::endl;
-		
-		}
-               
-	        dot_product_prev = dot_product;
+	        //if (increment_Hbias == 1){
+	            outputFile << "time = " << time << " "
+                               << "Hbias = " << Hbias_magn  <<  std::endl;
+	        //}
             }		
 
-	     // standard problem 3 diagnostics
+	    // standard problem 3 diagnostics
             if (diag_type == 3) {
                 int comp=0;
                 Real ani = anisotropy.max(comp);

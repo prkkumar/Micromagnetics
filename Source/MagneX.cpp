@@ -16,6 +16,9 @@ AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, 3> MagneX::prob_hi;
 // total steps in simulation
 int MagneX::nsteps;
 
+// number of increments on Hbias before reversing sign of increment
+int MagneX::nsteps_hysteresis;
+
 // 1 = first order forward Euler
 // 2 = iterative predictor-corrector
 // 3 = iterative direct solver
@@ -121,6 +124,8 @@ void InitializeMagneXNamespace() {
     }
 
     pp.get("nsteps",nsteps);
+
+    pp.query("nsteps_hysteresis",nsteps_hysteresis);
 
     equilibrium_tolerance = 1.e-6;
     pp.query("equilibrium_tolerance",equilibrium_tolerance);
