@@ -1,17 +1,20 @@
-n_cell = 166 42 1
-max_grid_size_x = 166
-max_grid_size_y = 42
-max_grid_size_z = 1
+# 2.5nm case
 
-dt = 5.e-15  # MATLAB code uses 5.e-6 nanoseconds
-nsteps = 400000
-plot_int = 10000
+n_cell = 200 50 1
+max_grid_size_x = 200
+max_grid_size_y = 50
+max_grid_size_z = 1
+dt = 5.e-15  # forward Euler
+
+stop_time = 6.e-9
+
+plot_int = 100000
 chk_int = -1
 restart = -1
 diag_type = 4
 
 prob_lo = 0. 0. 0.
-prob_hi = 498.e-9 126.e-9 3.e-9
+prob_hi = 500.e-9 125.e-9 2.5e-9
 
 mu0 = 1.25663e-6
 

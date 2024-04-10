@@ -14,6 +14,9 @@ namespace MagneX {
     // total steps in simulation
     extern int nsteps;
 
+    // maximum simulation time
+    extern amrex::Real stop_time;
+
     // number of increments on Hbias before reversing sign of increment
     extern int nsteps_hysteresis;
 

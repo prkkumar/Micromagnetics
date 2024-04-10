@@ -16,6 +16,9 @@ AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, 3> MagneX::prob_hi;
 // total steps in simulation
 int MagneX::nsteps;
 
+// maximum simulation time
+amrex::Real MagneX::stop_time;
+
 // number of increments on Hbias before reversing sign of increment
 int MagneX::nsteps_hysteresis;
 
@@ -123,8 +126,13 @@ void InitializeMagneXNamespace() {
         prob_hi[i] = temp[i];
     }
 
-    pp.get("nsteps",nsteps);
+    nsteps = 1000000000;
+    pp.query("nsteps",nsteps);
 
+    stop_time = 1.e9;
+    pp.query("stop_time",stop_time);
+
+    nsteps_hysteresis = 1000000000;
     pp.query("nsteps_hysteresis",nsteps_hysteresis);
 
     equilibrium_tolerance = 1.e-6;
