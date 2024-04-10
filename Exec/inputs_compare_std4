@@ -1,14 +1,32 @@
+##############
 # 2.5nm case
-
+##############
 n_cell = 200 50 1
 max_grid_size_x = 200
 max_grid_size_y = 50
 max_grid_size_z = 1
-dt = 5.e-15  # forward Euler
+dt = 5.e-15  # forward Euler, 1.e-14 unstable
+#dt = ? # Predictor-corrector
+#dt = ? # trapezoidal
+#dt = ? # SSPRK3
+#dt = ? # RK4
+
+##############
+# 1.25nm case
+##############
+#n_cell = 400 100 2
+#max_grid_size_x = 400
+#max_grid_size_y = 100
+#max_grid_size_z = 2
+#dt = ?  # forward Euler
+##dt = ? # Predictor-corrector
+##dt = ? # trapezoidal
+##dt = ? # SSPRK3
+##dt = ? # RK4
 
 stop_time = 6.e-9
 
-plot_int = 100000
+plot_int = 10000
 chk_int = -1
 restart = -1
 diag_type = 4
@@ -18,7 +36,7 @@ prob_hi = 500.e-9 125.e-9 2.5e-9
 
 mu0 = 1.25663e-6
 
-Mx_parser(x,y,z) = "8.e5 * (x>0.)*(x<498.e-9)*(y>0.)*(y<126.e-9)*(z>0.)*(z<3.e-9)"
+Mx_parser(x,y,z) = "8.e5 * (x>0.)*(x<500.e-9)*(y>0.)*(y<125.e-9)*(z>0.)*(z<2.5e-9)"
 My_parser(x,y,z) = "0."
 Mz_parser(x,y,z) = "0."
 
@@ -37,10 +55,10 @@ Hz_bias_parser(x,y,z,t) = "(t<=2.e-11)*1.e5 + (t>2.e-11)*(t<=3.e-11)*(3.e-11-t)*
 #Hz_bias_parser(x,y,z,t) = "(t<=2.e-11)*1.e5 + (t>2.e-11)*(t<=3.e-11)*(3.e-11-t)*1.e16"
 
 timedependent_alpha = 1
-alpha_parser(x,y,z,t) =  " (x>0.)*(x<498.e-9)*(y>0.)*(y<126.e-9)*(z>0.)*(z<3.e-9) * (0.5*(t<=1.e-9) + 0.02*(t>1.e-9))"
-Ms_parser(x,y,z) =       " (x>0.)*(x<498.e-9)*(y>0.)*(y<126.e-9)*(z>0.)*(z<3.e-9) * 8.e5"
-gamma_parser(x,y,z) =    " (x>0.)*(x<498.e-9)*(y>0.)*(y<126.e-9)*(z>0.)*(z<3.e-9) * -1.759e11"
-exchange_parser(x,y,z) = " (x>0.)*(x<498.e-9)*(y>0.)*(y<126.e-9)*(z>0.)*(z<3.e-9)* 1.3e-11"
+alpha_parser(x,y,z,t) =  " (x>0.)*(x<500.e-9)*(y>0.)*(y<125.e-9)*(z>0.)*(z<2.5e-9) * (0.5*(t<=1.e-9) + 0.02*(t>1.e-9))"
+Ms_parser(x,y,z) =       " (x>0.)*(x<500.e-9)*(y>0.)*(y<125.e-9)*(z>0.)*(z<2.5e-9) * 8.e5"
+gamma_parser(x,y,z) =    " (x>0.)*(x<500.e-9)*(y>0.)*(y<125.e-9)*(z>0.)*(z<2.5e-9) * -1.759e11"
+exchange_parser(x,y,z) = " (x>0.)*(x<500.e-9)*(y>0.)*(y<125.e-9)*(z>0.)*(z<2.5e-9)* 1.3e-11"
 anisotropy_parser(x,y,z) = "0."
 DMI_parser(x,y,z) = "0."
 
