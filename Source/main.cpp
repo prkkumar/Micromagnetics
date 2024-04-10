@@ -725,10 +725,10 @@ void main_main ()
         Real step_stop_time = ParallelDescriptor::second() - step_strt_time;
         ParallelDescriptor::ReduceRealMax(step_stop_time);
 
-        amrex::Print() << "Advanced step " << step << " in " << step_stop_time << " seconds\n";
+        amrex::Print() << "Advanced step " << step << " in " << step_stop_time << " seconds; time = " << time << "\n";
 
         // Write a plotfile of the data if plot_int > 0
-        if ( (plot_int > 0 && step%plot_int == 0) || diag_std4_plot) {
+        if ( (plot_int > 0 && step%plot_int == 0) || (plot_int > 0 && time > stop_time) || diag_std4_plot) {
             WritePlotfile(Ms, Mfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield,
                           H_demagfield, geom, time, step);
         }
@@ -753,6 +753,11 @@ void main_main ()
 
         amrex::Print() << "Curent     FAB megabyte spread across MPI nodes: ["
                        << min_fab_megabytes << " ... " << max_fab_megabytes << "]\n";
+
+        if (time > stop_time) {
+            amrex::Print() << "Stop time reached\n";
+            break;
+        }
 
     }
     
