@@ -511,8 +511,8 @@ void main_main ()
 			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
 
                 Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
-		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
-			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
+                                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+                                                                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
     	        // Evolve H_demag
                 if (demag_coupling == 1) {
@@ -562,8 +562,8 @@ void main_main ()
 			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
 
                 Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
-		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
-			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
+                                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+                                                                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
     	        // fast RHS does not have demag
                 if (demag_coupling == 1) {
