@@ -8,7 +8,7 @@ max_grid_size_z = 1
 dt = 5.e-15  # forward Euler (685s), 1.e-14 unstable
 dt = 2.5e-13 # Predictor-corrector (70s), 5.e-13 unstable
 dt = 1.e-13 # trapezoidal (63s), 2.5e-13 unstable
-dt = 1.e-13 # SSPRK3 (89s), 2.5e-13 unstable
+dt = 2.5e-13 # SSPRK3 (36s), 5.e-13 unstable
 dt = 5.e-13 # RK4 (24s), 1.e-12 unstable
 
 ##############
