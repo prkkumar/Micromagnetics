@@ -265,6 +265,7 @@ void Demagnetization::define()
         ComputeForwardFFT_heffte(Kzz, Kzz_fft_real, Kzz_fft_imag);
    }
 
+    /*
     MultiFab::Copy(Plt, Kxx_fft_real, 0, 0, 1, 0);
     MultiFab::Copy(Plt, Kxy_fft_real, 0, 1, 1, 0);
     MultiFab::Copy(Plt, Kxz_fft_real, 0, 2, 1, 0);
@@ -296,6 +297,7 @@ void Demagnetization::define()
                               "Kyz",
                               "Kzz"},
                              geom_large, 0., 0);
+    */
 
 }
 
