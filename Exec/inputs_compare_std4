@@ -18,11 +18,11 @@ dt = 5.e-13 # RK4 (24s), 1.e-12 unstable
 #max_grid_size_x = 320
 #max_grid_size_y = 80
 #max_grid_size_z = 2
-#dt = ? # forward Euler (trying 5.e-15, 2.5e-15, 1.e-15)
-#dt = ? # Predictor-corrector 2.5e-13 unstable (trying 1.e-13, 5.e-14)
-#dt = ? # trapezoidal 1.e-13 unstable (trying 5.e-14, 2.5e-14)
-#dt = ? # SSPRK3 1.e-13 unstable (trying 5.e-14)
-#dt = ? # RK4 2.5e-13 unstable (trying 1.e-13)
+#dt = ? # forward Euler 2.5e-15 unstable (trying 1.e-15)
+#dt = 5.e-14 # Predictor-corrector (1132s) 1.e-13 unstable
+#dt = ? # trapezoidal 2.5e-14 unstable (trying 1.e-14)
+#dt = 5.e-14 # SSPRK3 (665s) 1.e-13 unstable
+#dt = 1.e-13 # RK4 (438s) 2.5e-13 unstable
 
 stop_time = 4.e-9
 
