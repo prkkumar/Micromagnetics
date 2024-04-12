@@ -511,8 +511,8 @@ void main_main ()
 			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
 
                 Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
-		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
-			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
+                                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+                                                                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
     	        // Evolve H_demag
                 if (demag_coupling == 1) {
@@ -562,8 +562,8 @@ void main_main ()
 			       			                    MultiFab(rhs[2],amrex::make_alias,0,rhs[2].nComp()))};
 
                 Array<MultiFab, AMREX_SPACEDIM> ar_state{AMREX_D_DECL(MultiFab(state[0],amrex::make_alias,0,state[0].nComp()),
-		                                                          MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
-			       			                          MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
+                                                                      MultiFab(state[1],amrex::make_alias,0,state[1].nComp()),
+                                                                      MultiFab(state[2],amrex::make_alias,0,state[2].nComp()))};
 
     	        // fast RHS does not have demag
                 if (demag_coupling == 1) {
@@ -731,10 +731,10 @@ void main_main ()
         Real step_stop_time = ParallelDescriptor::second() - step_strt_time;
         ParallelDescriptor::ReduceRealMax(step_stop_time);
 
-        amrex::Print() << "Advanced step " << step << " in " << step_stop_time << " seconds\n";
+        amrex::Print() << "Advanced step " << step << " in " << step_stop_time << " seconds; time = " << time << "\n";
 
         // Write a plotfile of the data if plot_int > 0
-        if ( (plot_int > 0 && step%plot_int == 0) || diag_std4_plot) {
+        if ( (plot_int > 0 && step%plot_int == 0) || (plot_int > 0 && time > stop_time) || diag_std4_plot) {
             WritePlotfile(Ms, Mfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield,
                           H_demagfield, geom, time, step);
         }
@@ -759,6 +759,11 @@ void main_main ()
 
         amrex::Print() << "Curent     FAB megabyte spread across MPI nodes: ["
                        << min_fab_megabytes << " ... " << max_fab_megabytes << "]\n";
+
+        if (time > stop_time) {
+            amrex::Print() << "Stop time reached\n";
+            break;
+        }
 
     }
     
