@@ -190,7 +190,6 @@ void main_main ()
     amrex::Print() << " precession           = " << precession          << "\n";
     amrex::Print() << " demag_coupling       = " << demag_coupling      << "\n";
     if (demag_coupling == 1) amrex::Print() << " FFT_solver           = " << FFT_solver << "\n";
-    amrex::Print() << " anisotropy_coupling  = " << anisotropy_coupling << "\n";
     amrex::Print() << " M_normalization      = " << M_normalization     << "\n";
     amrex::Print() << " exchange_coupling    = " << exchange_coupling   << "\n";
     amrex::Print() << " DMI_coupling         = " << DMI_coupling        << "\n";
@@ -284,7 +283,8 @@ void main_main ()
             ComputeHbias(H_biasfield, time, geom);
         }
 
-        if ((Hbias_sweep == 1) && (increment_Hbias == 1)) {
+        // Check to increment Hbias for hysteresis
+	if ((Hbias_sweep == 1) && (increment_Hbias == 1)) {
            
            increment_count += 1;
 	   if (increment_count == nsteps_hysteresis) {
@@ -494,7 +494,7 @@ void main_main ()
         }  else if (TimeIntegratorOption == 4) { // AMReX and SUNDIALS integrators
 
 #ifdef AMREX_USE_SUNDIALS
-            // Create a RHS source function we will integrate
+	    // Create a RHS source function we will integrate
             // for MRI this represents the slow processes
             auto rhs_fun = [&](Vector<MultiFab>& rhs, const Vector<MultiFab>& state, const Real ) {
                 
@@ -640,7 +640,7 @@ void main_main ()
                     << normalized_Mz/num_mag << std::endl;
 
             // Check if field is equilibirated
-	    // If so, we will increment 
+	    // If so, we will increment Hbias 
             if ((Hbias_sweep == 1) && (step > 1)) {
 	    
 	        err_x = amrex::Math::abs((normalized_Mx/num_mag) - normalized_Mx_old);
@@ -684,10 +684,10 @@ void main_main ()
 
                 M_old = M;
 
-	        //if (increment_Hbias == 1){ 	
+	        if (increment_Hbias == 1){ 	
 	            outputFile << "time = " << time << " "
                                << "M/Ms = " << M <<  std::endl;
-	        //}  
+	        }  
             
 	        if (Hbias_x < 0) {
 	            Hbias_magn = -sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
@@ -696,21 +696,27 @@ void main_main ()
                     Hbias_magn = sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
 	        }
 
-	        //if (increment_Hbias == 1){
+	        if (increment_Hbias == 1){
 	            outputFile << "time = " << time << " "
                                << "Hbias = " << Hbias_magn  <<  std::endl;
-	        //}
+	        }
             }		
 
 	    // standard problem 3 diagnostics
             if (diag_type == 3) {
-                int comp=0;
-                Real ani = anisotropy.max(comp);
 
-                Real anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], ani);
-
-                outputFile << "anis_energy: " << anis_energy << std::endl;
-            }
+    		Real demag_energy = Energy_Density(H_demagfield[0], H_demagfield[1], H_demagfield[2], Ms);
+		Real exchange_energy = Energy_Density(H_exchangefield[0], H_exchangefield[1], H_exchangefield[2], Ms);
+		Real anis_energy = Energy_Density(H_anisotropyfield[0], H_anisotropyfield[1], H_anisotropyfield[2], Ms);
+             
+		Real total_energy = anis_energy + exchange_energy + demag_energy;
+	    
+	        outputFile << "time = " << time << " "
+                           << "demag_energy = "<< demag_energy << " " 
+			   << "exchange_energy = "<< exchange_energy << " "
+			   << "anis_energy = "<< anis_energy << " "
+			   << "total_energy = "<< total_energy <<  std::endl;
+	    }
 
         }
 

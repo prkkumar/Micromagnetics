@@ -75,6 +75,10 @@ Real AnisotropyEnergy(MultiFab& Ms,
 Real SumHbias(MultiFab& H_biasfield,
 	      MultiFab& Ms);
 
+Real Energy_Density(MultiFab& Coupling_Mechanism_x,
+                    MultiFab& Coupling_Mechanism_y,
+                    MultiFab& Coupling_Mechanism_z,
+                    MultiFab& Ms);
 /*
   EffectiveAnisotropyField.cpp
 */

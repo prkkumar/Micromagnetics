@@ -165,7 +165,7 @@ void InitializeMagneXNamespace() {
     diag_type = -1;
     pp.query("diag_type",diag_type);
 
-    Hbias_sweep = 1;
+    Hbias_sweep = 0;
     pp.query("Hbias_sweep", Hbias_sweep);
 	
     pp.get("mu0",mu0);

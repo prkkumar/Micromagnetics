@@ -185,3 +185,40 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
     return sum;
 }
+
+Real Energy_Density(MultiFab& Coupling_Mechanism_x,
+		    MultiFab& Coupling_Mechanism_y,
+		    MultiFab& Coupling_Mechanism_z,
+		    MultiFab& Ms)
+{
+    ReduceOps<ReduceOpSum> reduce_op;
+
+    ReduceData<Real> reduce_data(reduce_op);
+
+    using ReduceTuple = typename decltype(reduce_data)::Type;
+
+    for (MFIter mfi(Ms,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        const Box& bx = mfi.tilebox();
+
+        auto const& fab = Ms.array(mfi);
+        auto const& coupling_x = Coupling_Mechanism_x.array(mfi);
+        auto const& coupling_y = Coupling_Mechanism_y.array(mfi);
+        auto const& coupling_z = Coupling_Mechanism_z.array(mfi);
+
+        reduce_op.eval(bx, reduce_data,
+                       [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+        {
+            if (fab(i,j,k) > 0.) {
+                return {(coupling_x(i,j,k)/fab(i,j,k))*(coupling_x(i,j,k)/fab(i,j,k)) + (coupling_y(i,j,k)/fab(i,j,k))*(coupling_y(i,j,k)/fab(i,j,k)) + (coupling_z(i,j,k)/fab(i,j,k))*(coupling_z(i,j,k)/fab(i,j,k))};
+            } else {
+                return {0.};
+            }
+        });
+    }
+
+    Real sum = amrex::get<0>(reduce_data.value());
+    ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}
