@@ -179,9 +179,12 @@ void main_main ()
         }
     }
 
+    // one ghost cell
+    MultiFab Ms(ba, dm, 1, 1);
+
+    // no ghost cells
     MultiFab alpha(ba, dm, 1, 0);
     MultiFab gamma(ba, dm, 1, 0);
-    MultiFab Ms(ba, dm, 1, 1);
     MultiFab exchange(ba, dm, 1, 0);
     MultiFab DMI(ba, dm, 1, 0);
     MultiFab anisotropy(ba, dm, 1, 0);
@@ -541,7 +544,7 @@ void main_main ()
                         CalculateH_anisotropy(ar_state, H_anisotropyfield, Ms, anisotropy);
                     }
                 }
-		
+
                 // Compute f^n = f(M^n, H^n) 
                 Compute_LLG_RHS(ar_rhs, ar_state, H_demagfield, H_biasfield, H_exchangefield, H_DMIfield, H_anisotropyfield, alpha, Ms, gamma);
             };
