@@ -629,9 +629,11 @@ void main_main ()
             normalized_Mx = SumNormalizedM(Ms,Mfield[0]);
             normalized_My = SumNormalizedM(Ms,Mfield[1]);
             normalized_Mz = SumNormalizedM(Ms,Mfield[2]);
-        
-            if (normalized_Mx_prev > 0 && normalized_Mx <= 0.) {
-                diag_std4_plot = true;
+
+            if (diag_type == 4) {
+                if (normalized_Mx_prev > 0 && normalized_Mx <= 0.) {
+                    diag_std4_plot = true;
+                }
             }
 
             normalized_Mx_prev = normalized_Mx;

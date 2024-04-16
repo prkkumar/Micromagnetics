@@ -88,7 +88,7 @@ static amrex::Real LaplacianDx_Mag (
     amrex::Real const inv_dx = 1./dx[0];
 
     if ( Ms_hi_x == 0. && Ms_lo_x == 0.) {
-        return 0.;
+        return (BC_hi_x - BC_lo_x);
     } else if ( Ms_hi_x == 0.) {
         return inv_dx*(BC_hi_x - DownwardDx(F, i, j, k, dx));
     } else if ( Ms_lo_x == 0.){
@@ -111,7 +111,7 @@ static amrex::Real LaplacianDy_Mag (
     amrex::Real const inv_dy = 1./dx[1];
 
     if ( Ms_hi_y == 0. && Ms_lo_y == 0.) {
-        return 0.;
+        return (BC_hi_y - BC_lo_y);
     } else if ( Ms_hi_y == 0.) {
         return inv_dy*(BC_hi_y - DownwardDy(F, i, j, k, dx));
     } else if ( Ms_lo_y == 0.){
@@ -134,7 +134,7 @@ static amrex::Real LaplacianDz_Mag (
     amrex::Real const inv_dz = 1./dx[2];
 
     if ( Ms_hi_z == 0. && Ms_lo_z == 0.) {
-        return 0.;
+        return (BC_hi_z - BC_lo_z);
     } else if ( Ms_hi_z == 0.) {
         return inv_dz*(BC_hi_z - DownwardDz(F, i, j, k, dx));
     } else if ( Ms_lo_z == 0.){
