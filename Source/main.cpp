@@ -189,6 +189,22 @@ void main_main ()
     MultiFab DMI(ba, dm, 1, 0);
     MultiFab anisotropy(ba, dm, 1, 0);
 
+    MultiFab Hxx_exchange(ba, dm, 1, 0);
+    MultiFab Hxy_exchange(ba, dm, 1, 0);
+    MultiFab Hxz_exchange(ba, dm, 1, 0);
+    MultiFab Hyx_exchange(ba, dm, 1, 0);
+    MultiFab Hyy_exchange(ba, dm, 1, 0);
+    MultiFab Hyz_exchange(ba, dm, 1, 0);
+    MultiFab Hzx_exchange(ba, dm, 1, 0);
+    MultiFab Hzy_exchange(ba, dm, 1, 0);
+    MultiFab Hzz_exchange(ba, dm, 1, 0);
+
+    Real total_energy;
+    Real demag_energy;
+    Real exchange_energy;
+    Real anis_energy;
+
+
     amrex::Print() << "==================== Initial Setup ====================\n";
     amrex::Print() << " precession           = " << precession          << "\n";
     amrex::Print() << " demag_coupling       = " << demag_coupling      << "\n";
@@ -710,10 +726,16 @@ void main_main ()
 	    // standard problem 3 diagnostics
             if (diag_type == 3) {
 
-    		Real demag_energy = Energy_Density(H_demagfield[0], H_demagfield[1], H_demagfield[2], Ms);
+    		/*
+		Real demag_energy = Energy_Density(H_demagfield[0], H_demagfield[1], H_demagfield[2], Ms);
 		Real exchange_energy = Energy_Density(H_exchangefield[0], H_exchangefield[1], H_exchangefield[2], Ms);
 		Real anis_energy = Energy_Density(H_anisotropyfield[0], H_anisotropyfield[1], H_anisotropyfield[2], Ms);
-             
+                */
+
+	        // demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
+                // exchange_energy = ExchangeEnergy(Mfield, H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange, Ms, geom);		
+		// anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], anisotropy);
+		
 		Real total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "
@@ -721,7 +743,8 @@ void main_main ()
 			   << "exchange_energy = "<< exchange_energy << " "
 			   << "anis_energy = "<< anis_energy << " "
 			   << "total_energy = "<< total_energy <<  std::endl;
-	    }
+
+	     }
 
         }
 

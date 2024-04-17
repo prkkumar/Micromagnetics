@@ -1,4 +1,5 @@
 #include "MagneX.H"
+#include "CartesianAlgorithm_K.H"
 #include<cmath>
 
 long CountMagneticCells(MultiFab& Ms)
@@ -144,12 +145,12 @@ Real SumHbias(MultiFab& H_biasfield,
 
     return sum;
 }
-
+/*
 Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_x,
                       MultiFab& Mfield_y,
                       MultiFab& Mfield_z,
-		      Real anisotropy)
+		      MultiFab& anisotropy)
 {
     // timer for profiling
     // BL_PROFILE_VAR("SumNormalizedM()",SumNormalizedM);
@@ -168,12 +169,13 @@ Real AnisotropyEnergy(MultiFab& Ms,
         auto const& Mx = Mfield_x.array(mfi);
         auto const& My = Mfield_y.array(mfi);
         auto const& Mz = Mfield_z.array(mfi);
+	auto const& anis = anisotropy.array(mfi);
 
         reduce_op.eval(bx, reduce_data,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-		return {-(anisotropy) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
+		return {-(anis(i,j,k)) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
             } else {
                 return {0.};
             }
@@ -185,7 +187,8 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
     return sum;
 }
-
+*/
+/*
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
                   MultiFab& Mfield_y,
@@ -230,37 +233,58 @@ Real DemagEnergy(MultiFab& Ms,
 
     return sum;
 }
-
+*/
+/*
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
-                         Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
-                         MultiFab& Ms,
-                         MultiFab& exchange,
-                         MultiFab& DMI,
-                         const Geometry& geom)
+                    Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
+		    MultiFab& Hxx_exchange,
+		    MultiFab& Hxy_exchange,
+		    MultiFab& Hxz_exchange,
+		    MultiFab& Hyx_exchange,
+		    MultiFab& Hyy_exchange,
+		    MultiFab& Hyz_exchange,
+		    MultiFab& Hzx_exchange,
+		    MultiFab& Hzy_exchange,
+		    MultiFab& Hzz_exchange,
+                    MultiFab& Ms,
+		    const Geometry& geom)
 {
     // timer for profiling
     BL_PROFILE_VAR("CalculateH_exchange()",CalculateH_exchange);
 
+    ReduceOps<ReduceOpSum> reduce_op;
+
+    ReduceData<Real> reduce_data(reduce_op);
+
+    using ReduceTuple = typename decltype(reduce_data)::Type;
+	
     for (MFIter mfi(Mfield[0], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-        const Box& bx = mfi.validbox();
-
         // extract dd from the geometry object
-        GpuArray<Real,AMREX_SPACEDIM> dd = geom.CellSizeArray();
+        GpuArray<Real,AMREX_SPACEDIM> dd = geom.CellSizeArray();	   
+    
+	const Box& bx = mfi.validbox();
 
-        const Array4<Real>& Mx = Mfield[0].array(mfi);
-        const Array4<Real>& My = Mfield[1].array(mfi);
-        const Array4<Real>& Mz = Mfield[2].array(mfi);
-        const Array4<Real>& Ms_arr = Ms.array(mfi);
-        const Array4<Real>& exchange_arr = exchange.array(mfi);
+        auto const& Mx = Mfield[0].array(mfi);
+        auto const& My = Mfield[1].array(mfi);
+        auto const& Mz = Mfield[2].array(mfi);
+        auto const& Ms_arr = Ms.array(mfi);
+	
+	auto const&  Hxx = Hxx_exchange.array(mfi);
+        auto const&  Hxy = Hxy_exchange.array(mfi);
+        auto const&  Hxz = Hxz_exchange.array(mfi);
+        auto const&  Hyx = Hyx_exchange.array(mfi);
+        auto const&  Hyy = Hyy_exchange.array(mfi);
+        auto const&  Hyz = Hyz_exchange.array(mfi);
+        auto const&  Hzx = Hzx_exchange.array(mfi);
+        auto const&  Hzy = Hzy_exchange.array(mfi);
+        auto const&  Hzz = Hzz_exchange.array(mfi);
 
-        amrex::ParallelFor(bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                // determine if the material is magnetic or not
+        reduce_op.eval(bx, reduce_data, [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+	{
+
+ 	    // determine if the material is magnetic or not
                 if (Ms_arr(i,j,k) > 0.){
-
-                    if (exchange_coupling == 1){
-                        if (exchange_arr(i,j,k) == 0.) amrex::Abort("The exchange_arr(i,j,k) is 0.0 while including the exchange coupling term H_exchange for H_eff");
 
                         // H_exchange - use M^(old_time)
                         // amrex::Real const H_exchange_coeff = 2.0 * exchange_arr(i,j,k) / mu0 / Ms_arr(i,j,k) / Ms_arr(i,j,k);
@@ -297,19 +321,18 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                         amrex::Real dMzdz_BC_lo_z = 0.0; // dMz/dz = 0
                         amrex::Real dMzdz_BC_hi_z = 0.0; // dMz/dz = 0
 
-                        Hxx_exchange(i,j,k) = DMDx_Mag(Mx, Ms_lo_x, Ms_hi_x, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
-                        Hxy_exchange(i,j,k) = DMDx_Mag(My, Ms_lo_x, Ms_hi_x, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
-			Hxz_exchange(i,j,k) = DMDx_Mag(Mz, Ms_lo_x, Ms_hi_x, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
+                        Hxx(i,j,k) = DMDx_Mag(Mx, Ms_lo_x, Ms_hi_x, dMxdx_BC_lo_x, dMxdx_BC_hi_x, i, j, k, dd);
+                        Hxy(i,j,k) = DMDx_Mag(My, Ms_lo_x, Ms_hi_x, dMxdy_BC_lo_y, dMxdy_BC_hi_y, i, j, k, dd);
+			Hxz(i,j,k) = DMDx_Mag(Mz, Ms_lo_x, Ms_hi_x, dMxdz_BC_lo_z, dMxdz_BC_hi_z, i, j, k, dd);
 
-                        Hyx_exchange(i,j,k) = DMDy_Mag(Mx, Ms_lo_y, Ms_hi_y, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd); 
-                        Hyy_exchange(i,j,k) = DMDy_Mag(My, Ms_lo_y, Ms_hi_y, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd); 
-                        Hyz_exchange(i,j,k) = DMDy_Mag(Mz, Ms_lo_y, Ms_hi_y, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd);			
+                        Hyx(i,j,k) = DMDy_Mag(Mx, Ms_lo_y, Ms_hi_y, dMydx_BC_lo_x, dMydx_BC_hi_x, i, j, k, dd); 
+                        Hyy(i,j,k) = DMDy_Mag(My, Ms_lo_y, Ms_hi_y, dMydy_BC_lo_y, dMydy_BC_hi_y, i, j, k, dd); 
+                        Hyz(i,j,k) = DMDy_Mag(Mz, Ms_lo_y, Ms_hi_y, dMydz_BC_lo_z, dMydz_BC_hi_z, i, j, k, dd);			
 
-                        Hzx_exchange(i,j,k) = DMDz_Mag(Mx, Ms_lo_z, Ms_hi_z, dMxdx_BC_lo_z, dMxdx_BC_hi_z, i, j, k, dd);
-                        Hzy_exchange(i,j,k) = DMDz_Mag(My, Ms_lo_z, Ms_hi_z, dMxdx_BC_lo_z, dMxdx_BC_hi_z, i, j, k, dd);
-                        Hzz_exchange(i,j,k) = DMDz_Mag(Mz, Ms_lo_z, Ms_hi_z, dMxdx_BC_lo_z, dMxdx_BC_hi_z, i, j, k, dd);
+                        Hzx(i,j,k) = DMDz_Mag(Mx, Ms_lo_z, Ms_hi_z, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
+                        Hzy(i,j,k) = DMDz_Mag(My, Ms_lo_z, Ms_hi_z, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd);
+                        Hzz(i,j,k) = DMDz_Mag(Mz, Ms_lo_z, Ms_hi_z, dMzdz_BC_lo_z, dMzdz_BC_hi_z, i, j, k, dd);
 
-			/*
                         if (DMI_coupling == 1) {
                             if (DMI_arr(i,j,k) == 0.) amrex::Abort("The DMI_arr(i,j,k) is 0.0 while including the DMI coupling");
 
@@ -326,19 +349,21 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                             dMzdy_BC_lo_y =  1.0/xi_DMI*My(i,j,k);  // lower y BC: dMz/dy = -1/xi*My
                             dMzdy_BC_hi_y =  1.0/xi_DMI*My(i,j,k);  // higher y BC: dMz/dy = 1/xi*My
                         }
-			*/
                         
-			H_exchange = Hxx_exchange(i,j,k) + Hxy_exchange(i,j,k) +  Hxz_exchange(i,j,k) + Hyx_exchange(i,j,k) + Hyy_exchange(i,j,k) + Hyz_exchange(i,j,k) + Hzx_exchange(i,j,k) + Hzy_exchange(i,j,k) + Hzz_exchange(i,j,k);
+			return{Hxx(i,j,k) + Hxy(i,j,k) +  Hxz(i,j,k) + Hyx(i,j,k) + Hyy(i,j,k) + Hyz(i,j,k) + Hzx(i,j,k) + Hzy(i,j,k) + Hzz(i,j,k)};
 
-
-		    }
-                } else {
-                    Hx_exchange(i,j,k) = Hy_exchange(i,j,k) = Hz_exchange(i,j,k) = 0.;
+		} else {
+                    return{0.};
                 }
             });
     }
-}
 
+    Real sum = amrex::get<0>(reduce_data.value());
+    ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}
+*/
 
 
 Real Energy_Density(MultiFab& Coupling_Mechanism_x,
