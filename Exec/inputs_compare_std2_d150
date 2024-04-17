@@ -1,8 +1,8 @@
 ###
-n_cell = 150 30 3   
-max_grid_size_x = 150
-max_grid_size_y = 30
-max_grid_size_z = 3
+n_cell = 250 50 5
+max_grid_size_x = 250
+max_grid_size_y = 50
+max_grid_size_z = 5
 
 dt = 1.e-13  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 100000000
