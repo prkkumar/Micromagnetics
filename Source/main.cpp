@@ -732,16 +732,19 @@ void main_main ()
 		Real anis_energy = Energy_Density(H_anisotropyfield[0], H_anisotropyfield[1], H_anisotropyfield[2], Ms);
                 */
 
-	        // demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
-                // exchange_energy = ExchangeEnergy(Mfield, H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange, Ms, geom);		
-		// anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], anisotropy);
+                int comp=0;
+                Real anis = anisotropy.max(comp);
+
+	        demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
+                exchange_energy = ExchangeEnergy(Mfield, H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange, Ms, geom);		
+		anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], anis);
 		
-		Real total_energy = anis_energy + exchange_energy + demag_energy;
+		total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "
                            << "demag_energy = "<< demag_energy << " " 
-			   << "exchange_energy = "<< exchange_energy << " "
-			   << "anis_energy = "<< anis_energy << " "
+		 	   << "exchange_energy = "<< exchange_energy << " "
+		 	   << "anis_energy = "<< anis_energy << " "
 			   << "total_energy = "<< total_energy <<  std::endl;
 
 	     }

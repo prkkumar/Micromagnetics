@@ -145,12 +145,11 @@ Real SumHbias(MultiFab& H_biasfield,
 
     return sum;
 }
-/*
 Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_x,
                       MultiFab& Mfield_y,
                       MultiFab& Mfield_z,
-		      MultiFab& anisotropy)
+		      Real anis)
 {
     // timer for profiling
     // BL_PROFILE_VAR("SumNormalizedM()",SumNormalizedM);
@@ -169,13 +168,12 @@ Real AnisotropyEnergy(MultiFab& Ms,
         auto const& Mx = Mfield_x.array(mfi);
         auto const& My = Mfield_y.array(mfi);
         auto const& Mz = Mfield_z.array(mfi);
-	auto const& anis = anisotropy.array(mfi);
 
         reduce_op.eval(bx, reduce_data,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-		return {-(anis(i,j,k)) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
+		return {-(anis/fab(i,j,k)) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
             } else {
                 return {0.};
             }
@@ -187,8 +185,6 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
     return sum;
 }
-*/
-/*
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
                   MultiFab& Mfield_y,
@@ -233,8 +229,7 @@ Real DemagEnergy(MultiFab& Ms,
 
     return sum;
 }
-*/
-/*
+
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                     Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
 		    MultiFab& Hxx_exchange,
@@ -332,7 +327,8 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                         Hzx(i,j,k) = DMDz_Mag(Mx, Ms_lo_z, Ms_hi_z, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
                         Hzy(i,j,k) = DMDz_Mag(My, Ms_lo_z, Ms_hi_z, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd);
                         Hzz(i,j,k) = DMDz_Mag(Mz, Ms_lo_z, Ms_hi_z, dMzdz_BC_lo_z, dMzdz_BC_hi_z, i, j, k, dd);
-
+                         
+			/*
                         if (DMI_coupling == 1) {
                             if (DMI_arr(i,j,k) == 0.) amrex::Abort("The DMI_arr(i,j,k) is 0.0 while including the DMI coupling");
 
@@ -349,7 +345,7 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                             dMzdy_BC_lo_y =  1.0/xi_DMI*My(i,j,k);  // lower y BC: dMz/dy = -1/xi*My
                             dMzdy_BC_hi_y =  1.0/xi_DMI*My(i,j,k);  // higher y BC: dMz/dy = 1/xi*My
                         }
-                        
+                        */
 			return{Hxx(i,j,k) + Hxy(i,j,k) +  Hxz(i,j,k) + Hyx(i,j,k) + Hyy(i,j,k) + Hyz(i,j,k) + Hzx(i,j,k) + Hzy(i,j,k) + Hzz(i,j,k)};
 
 		} else {
@@ -363,7 +359,6 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
 
     return sum;
 }
-*/
 
 
 Real Energy_Density(MultiFab& Coupling_Mechanism_x,

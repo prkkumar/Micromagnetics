@@ -65,13 +65,11 @@ Real SumNormalizedM(MultiFab& Ms,
 Real SumHeff(MultiFab& H_demagfield,
              MultiFab& H_exchangefield,
              MultiFab& H_biasfield);
-/*
 Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_x,
                       MultiFab& Mfield_y,
                       MultiFab& Mfield_z,
-                      MultiFab& anisotropy);
-*/
+                      Real anis);
 Real SumHbias(MultiFab& H_biasfield,
 	      MultiFab& Ms);
 
@@ -79,7 +77,6 @@ Real Energy_Density(MultiFab& Coupling_Mechanism_x,
                     MultiFab& Coupling_Mechanism_y,
                     MultiFab& Coupling_Mechanism_z,
                     MultiFab& Ms);
-/*
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                     Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
                     MultiFab& Hxx_exchange,
@@ -93,8 +90,6 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                     MultiFab& Hzz_exchange,
                     MultiFab& Ms,
                     const Geometry& geom);
-*/
-/*
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
                   MultiFab& Mfield_y,
@@ -102,7 +97,6 @@ Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Demagfield_x,
                   MultiFab& Demagfield_y,
                   MultiFab& Demagfield_z);
-*/
 
 /*
   EffectiveAnisotropyField.cpp
