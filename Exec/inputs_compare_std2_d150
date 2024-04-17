@@ -4,7 +4,7 @@ max_grid_size_x = 250
 max_grid_size_y = 50
 max_grid_size_z = 5
 
-dt = 1.e-13  # MATLAB code uses 5.e-6 nanoseconds
+dt = 2.5e-13  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 100000000
 nsteps_hysteresis = 100 # Must = 2*(H_bias/increment_size)
 plot_int = 100000
@@ -49,16 +49,15 @@ DMI_coupling = 0
 # tolerance for equilibrium in M when Hbias_sweep = 1
 equilibrium_tolerance = 1.e-6
 
-# size of increment for Hbias after equilibrium reached when Hbias_sweep = 1
 # for standard problem 2 we step the field from H = 64,000 -> H= -64,000 in 4,000 steps 
 increment_size = 1280
 
 # INTEGRATION
 
 #TimeIntegratorOption = 1 #Forward Euler
-TimeIntegratorOption = 2 #Predictor-corrector
+#TimeIntegratorOption = 2 #Predictor-corrector
 #TimeIntegratorOption = 3 #2nd order artemis way
-#TimeIntegratorOption = 4 #amrex/sundials backend integrators
+TimeIntegratorOption = 4 #amrex/sundials backend integrators
 
 # tolerance threshold (L_inf change between iterations) for TimeIntegrationOption 2 and 3
 iterative_tolerance = 1.e-9
@@ -80,7 +79,7 @@ integration.type = RungeKutta
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
 ### 4 = RK4 Method
-integration.rk.type = 3
+integration.rk.type = 4
 
 ## If using a user-specified Butcher Tableau, then
 ## set nodes, weights, and table entries here:

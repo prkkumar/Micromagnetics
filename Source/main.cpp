@@ -86,7 +86,7 @@ void main_main ()
 
     Real Hbias_magn;
     Real M;
-    Real M_old;
+    Real M_old = 0.;
     
     // Changes to +1 when we want to reverse Hbias trend
     int sign = -1;
@@ -301,7 +301,7 @@ void main_main ()
 
 	   // If we have completed the hysteresis loop, we end the simulation
 	   if (increment_count == 2*nsteps_hysteresis) {
-	       step = nsteps;
+	       break;
 	   }
 	   
 	   for (MFIter mfi(H_biasfield[0]); mfi.isValid(); ++mfi)
@@ -679,31 +679,28 @@ void main_main ()
                 Real Hbias_x = SumHbias(H_biasfield[0],Ms)/num_mag;
                 Real Hbias_y = SumHbias(H_biasfield[1],Ms)/num_mag;
                 Real Hbias_z = SumHbias(H_biasfield[2],Ms)/num_mag;
+                Hbias_magn = sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
+                if (Hbias_x < 0) Hbias_magn *= -1.;
 
                 M = (normalized_Mx/num_mag) + (normalized_My/num_mag) + (normalized_Mz/num_mag);
 
-                if((M_old > 0 && M <= 0.) || (M_old < 0 && M >= 0.)){
+                if ( (M_old > 0 && M <= 0.) || (M_old < 0 && M >= 0.) ) {
 	            outputFile << "time = " << time << " "
-                               << "Coercivity = " << M <<  std::endl;  	    
-	         } 
+                               << "Coercivity = " << Hbias_magn <<  std::endl;
+                }
 
                 M_old = M;
 
-	        if (increment_Hbias == 1){ 	
+                if (increment_Hbias == 1 && Hbias_magn < 1.e-6 && Hbias_magn > -1.e-6) {
 	            outputFile << "time = " << time << " "
-                               << "M/Ms = " << M <<  std::endl;
-	        }  
-            
-	        if (Hbias_x < 0) {
-	            Hbias_magn = -sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
+                               << "Hbias_magn = " << Hbias_magn << " "
+                               << "Remenance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
                 }
-	        else {
-                    Hbias_magn = sqrt(Hbias_x*Hbias_x + Hbias_y*Hbias_y + Hbias_z*Hbias_z);
-	        }
 
-	        if (increment_Hbias == 1){
+	        if (increment_Hbias == 1) {
 	            outputFile << "time = " << time << " "
-                               << "Hbias = " << Hbias_magn  <<  std::endl;
+                               << "Hbias = " << Hbias_magn << " "
+                               << "M/Ms = " << M <<  std::endl;
 	        }
             }		
 
