@@ -173,7 +173,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-		return {-(anis/fab(i,j,k)) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
+		return {-(anis) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
             } else {
                 return {0.};
             }
@@ -217,7 +217,7 @@ Real DemagEnergy(MultiFab& Ms,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-                return {-fab(i,j,k)*mu0*(Mx(i,j,k)/fab(i,j,k))*(demag_x(i,j,k)/fab(i,j,k)) + (My(i,j,k)/fab(i,j,k))*(demag_y(i,j,k)/fab(i,j,k)) + (Mz(i,j,k)/fab(i,j,k))*(demag_z(i,j,k)/fab(i,j,k))};
+                return {(-fab(i,j,k)*mu0/2.)*((Mx(i,j,k)/fab(i,j,k))*(demag_x(i,j,k)) + (My(i,j,k)/fab(i,j,k))*(demag_y(i,j,k)) + (Mz(i,j,k)/fab(i,j,k))*(demag_z(i,j,k)))};
             } else {
                 return {0.};
             }
@@ -346,7 +346,7 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                             dMzdy_BC_hi_y =  1.0/xi_DMI*My(i,j,k);  // higher y BC: dMz/dy = 1/xi*My
                         }
                         */
-			return{Hxx(i,j,k) + Hxy(i,j,k) +  Hxz(i,j,k) + Hyx(i,j,k) + Hyy(i,j,k) + Hyz(i,j,k) + Hzx(i,j,k) + Hzy(i,j,k) + Hzz(i,j,k)};
+			return{Hxx(i,j,k)/Ms_arr(i,j,k) + Hxy(i,j,k)/Ms_arr(i,j,k) +  Hxz(i,j,k)/Ms_arr(i,j,k) + Hyx(i,j,k)/Ms_arr(i,j,k) + Hyy(i,j,k)/Ms_arr(i,j,k) + Hyz(i,j,k)/Ms_arr(i,j,k) + Hzx(i,j,k)/Ms_arr(i,j,k) + Hzy(i,j,k)/Ms_arr(i,j,k) + Hzz(i,j,k)/Ms_arr(i,j,k)};
 
 		} else {
                     return{0.};
