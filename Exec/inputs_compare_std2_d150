@@ -6,7 +6,7 @@ max_grid_size_z = 5
 
 dt = 2.5e-13  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 100000000
-nsteps_hysteresis = 100 # Must = 2*(H_bias/increment_size)
+nsteps_hysteresis = 100 # Must = 2*(Hx_bias/increment_size)
 plot_int = 100000
 chk_int = -1
 restart = -1

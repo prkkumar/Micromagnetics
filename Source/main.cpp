@@ -305,7 +305,6 @@ void main_main ()
         // Check to increment Hbias for hysteresis
 	if ((Hbias_sweep == 1) && (increment_Hbias == 1)) {
            
-           increment_count += 1;
 	   if (increment_count == nsteps_hysteresis) {
 	       sign *= -1;
                outputFile << "time = " << time << " "
@@ -313,13 +312,10 @@ void main_main ()
                     << normalized_Mx/num_mag << " "
                     << normalized_My/num_mag << " "
                     << normalized_Mz/num_mag << std::endl;
-	   }	   
-
-	   // If we have completed the hysteresis loop, we end the simulation
-	   if (increment_count == 2*nsteps_hysteresis) {
-	       break;
 	   }
-	   
+
+           increment_count += 1;
+
 	   for (MFIter mfi(H_biasfield[0]); mfi.isValid(); ++mfi)
            {
                const Box& bx = mfi.tilebox();
@@ -707,7 +703,7 @@ void main_main ()
 
                 M_old = M;
 
-                if (increment_Hbias == 1 && Hbias_magn < 1.e-6 && Hbias_magn > -1.e-6) {
+                if (increment_Hbias == 1 && (increment_count == nsteps_hysteresis/2 || increment_count == 3*nsteps_hysteresis/2) ) {
 	            outputFile << "time = " << time << " "
                                << "Hbias_magn = " << Hbias_magn << " "
                                << "Remenance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
@@ -787,6 +783,11 @@ void main_main ()
 
         amrex::Print() << "Curent     FAB megabyte spread across MPI nodes: ["
                        << min_fab_megabytes << " ... " << max_fab_megabytes << "]\n";
+
+        // If we have completed the hysteresis loop, we end the simulation
+        if (increment_Hbias == 1 && increment_count == 2*nsteps_hysteresis) {
+            break;
+        }
 
         if (time > stop_time) {
             amrex::Print() << "Stop time reached\n";
