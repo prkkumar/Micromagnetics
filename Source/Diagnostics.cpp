@@ -173,7 +173,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-		return {-(anis) * std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
+		return {pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2)};
             } else {
                 return {0.};
             }
@@ -183,7 +183,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
     Real sum = amrex::get<0>(reduce_data.value());
     ParallelDescriptor::ReduceRealSum(sum);
 
-    return sum;
+    return sum*(-anis);
 }
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
@@ -217,7 +217,7 @@ Real DemagEnergy(MultiFab& Ms,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
             if (fab(i,j,k) > 0.) {
-                return {(-fab(i,j,k)*mu0/2.)*((Mx(i,j,k)/fab(i,j,k))*(demag_x(i,j,k)) + (My(i,j,k)/fab(i,j,k))*(demag_y(i,j,k)) + (Mz(i,j,k)/fab(i,j,k))*(demag_z(i,j,k)))};
+                return {Mx(i,j,k)*demag_x(i,j,k) + My(i,j,k)*demag_y(i,j,k) + Mz(i,j,k)*demag_z(i,j,k)};
             } else {
                 return {0.};
             }
@@ -227,22 +227,13 @@ Real DemagEnergy(MultiFab& Ms,
     Real sum = amrex::get<0>(reduce_data.value());
     ParallelDescriptor::ReduceRealSum(sum);
 
-    return sum;
+    return sum*mu0/2.;
 }
 
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
-                    Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
-		    MultiFab& Hxx_exchange,
-		    MultiFab& Hxy_exchange,
-		    MultiFab& Hxz_exchange,
-		    MultiFab& Hyx_exchange,
-		    MultiFab& Hyy_exchange,
-		    MultiFab& Hyz_exchange,
-		    MultiFab& Hzx_exchange,
-		    MultiFab& Hzy_exchange,
-		    MultiFab& Hzz_exchange,
                     MultiFab& Ms,
-		    const Geometry& geom)
+		    const Geometry& geom,
+		    Real exch_const)
 {
     // timer for profiling
     BL_PROFILE_VAR("CalculateH_exchange()",CalculateH_exchange);
@@ -265,16 +256,6 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
         auto const& Mz = Mfield[2].array(mfi);
         auto const& Ms_arr = Ms.array(mfi);
 	
-	auto const&  Hxx = Hxx_exchange.array(mfi);
-        auto const&  Hxy = Hxy_exchange.array(mfi);
-        auto const&  Hxz = Hxz_exchange.array(mfi);
-        auto const&  Hyx = Hyx_exchange.array(mfi);
-        auto const&  Hyy = Hyy_exchange.array(mfi);
-        auto const&  Hyz = Hyz_exchange.array(mfi);
-        auto const&  Hzx = Hzx_exchange.array(mfi);
-        auto const&  Hzy = Hzy_exchange.array(mfi);
-        auto const&  Hzz = Hzz_exchange.array(mfi);
-
         reduce_op.eval(bx, reduce_data, [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
 	{
 
@@ -316,17 +297,17 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                         amrex::Real dMzdz_BC_lo_z = 0.0; // dMz/dz = 0
                         amrex::Real dMzdz_BC_hi_z = 0.0; // dMz/dz = 0
 
-                        Hxx(i,j,k) = DMDx_Mag(Mx, Ms_lo_x, Ms_hi_x, dMxdx_BC_lo_x, dMxdx_BC_hi_x, i, j, k, dd);
-                        Hxy(i,j,k) = DMDx_Mag(My, Ms_lo_x, Ms_hi_x, dMxdy_BC_lo_y, dMxdy_BC_hi_y, i, j, k, dd);
-			Hxz(i,j,k) = DMDx_Mag(Mz, Ms_lo_x, Ms_hi_x, dMxdz_BC_lo_z, dMxdz_BC_hi_z, i, j, k, dd);
+			amrex::Real Hxx = DMDx_Mag(Mx, Ms_lo_x, Ms_hi_x, dMxdx_BC_lo_x, dMxdx_BC_hi_x, i, j, k, dd);
+			amrex::Real Hxy = DMDx_Mag(My, Ms_lo_x, Ms_hi_x, dMxdy_BC_lo_y, dMxdy_BC_hi_y, i, j, k, dd);
+			amrex::Real Hxz = DMDx_Mag(Mz, Ms_lo_x, Ms_hi_x, dMxdz_BC_lo_z, dMxdz_BC_hi_z, i, j, k, dd);
 
-                        Hyx(i,j,k) = DMDy_Mag(Mx, Ms_lo_y, Ms_hi_y, dMydx_BC_lo_x, dMydx_BC_hi_x, i, j, k, dd); 
-                        Hyy(i,j,k) = DMDy_Mag(My, Ms_lo_y, Ms_hi_y, dMydy_BC_lo_y, dMydy_BC_hi_y, i, j, k, dd); 
-                        Hyz(i,j,k) = DMDy_Mag(Mz, Ms_lo_y, Ms_hi_y, dMydz_BC_lo_z, dMydz_BC_hi_z, i, j, k, dd);			
+			amrex::Real Hyx = DMDy_Mag(Mx, Ms_lo_y, Ms_hi_y, dMydx_BC_lo_x, dMydx_BC_hi_x, i, j, k, dd); 
+			amrex::Real Hyy = DMDy_Mag(My, Ms_lo_y, Ms_hi_y, dMydy_BC_lo_y, dMydy_BC_hi_y, i, j, k, dd); 
+			amrex::Real Hyz = DMDy_Mag(Mz, Ms_lo_y, Ms_hi_y, dMydz_BC_lo_z, dMydz_BC_hi_z, i, j, k, dd);			
 
-                        Hzx(i,j,k) = DMDz_Mag(Mx, Ms_lo_z, Ms_hi_z, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
-                        Hzy(i,j,k) = DMDz_Mag(My, Ms_lo_z, Ms_hi_z, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd);
-                        Hzz(i,j,k) = DMDz_Mag(Mz, Ms_lo_z, Ms_hi_z, dMzdz_BC_lo_z, dMzdz_BC_hi_z, i, j, k, dd);
+			amrex::Real Hzx = DMDz_Mag(Mx, Ms_lo_z, Ms_hi_z, dMzdx_BC_lo_x, dMzdx_BC_hi_x, i, j, k, dd);
+			amrex::Real Hzy = DMDz_Mag(My, Ms_lo_z, Ms_hi_z, dMzdy_BC_lo_y, dMzdy_BC_hi_y, i, j, k, dd);
+			amrex::Real Hzz = DMDz_Mag(Mz, Ms_lo_z, Ms_hi_z, dMzdz_BC_lo_z, dMzdz_BC_hi_z, i, j, k, dd);
                          
 			/*
                         if (DMI_coupling == 1) {
@@ -346,7 +327,7 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                             dMzdy_BC_hi_y =  1.0/xi_DMI*My(i,j,k);  // higher y BC: dMz/dy = 1/xi*My
                         }
                         */
-			return{Hxx(i,j,k)/Ms_arr(i,j,k) + Hxy(i,j,k)/Ms_arr(i,j,k) +  Hxz(i,j,k)/Ms_arr(i,j,k) + Hyx(i,j,k)/Ms_arr(i,j,k) + Hyy(i,j,k)/Ms_arr(i,j,k) + Hyz(i,j,k)/Ms_arr(i,j,k) + Hzx(i,j,k)/Ms_arr(i,j,k) + Hzy(i,j,k)/Ms_arr(i,j,k) + Hzz(i,j,k)/Ms_arr(i,j,k)};
+			return{pow(Hxx/Ms_arr(i,j,k),2) + pow(Hxy/Ms_arr(i,j,k),2) + pow(Hxz/Ms_arr(i,j,k),2) + pow(Hyx/Ms_arr(i,j,k),2) + pow(Hyy/Ms_arr(i,j,k),2) + pow(Hyz/Ms_arr(i,j,k),2) + pow(Hzx/Ms_arr(i,j,k),2) + pow(Hzy/Ms_arr(i,j,k),2) + pow(Hzz/Ms_arr(i,j,k),2)};
 
 		} else {
                     return{0.};
@@ -357,7 +338,7 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
     Real sum = amrex::get<0>(reduce_data.value());
     ParallelDescriptor::ReduceRealSum(sum);
 
-    return sum;
+    return sum*exch_const;
 }
 
 
