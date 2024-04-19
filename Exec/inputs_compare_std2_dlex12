@@ -1,43 +1,44 @@
 ###
-n_cell = 200 40 4
-max_grid_size_x = 200
-max_grid_size_y = 40
-max_grid_size_z = 0
+n_cell = 50 10 1
+max_grid_size_x = 50
+max_grid_size_y = 10
+max_grid_size_z = 1
 
-dt = 2.5e-13  # MATLAB code uses 5.e-6 nanoseconds
 nsteps = 100000000
-nsteps_hysteresis = 100 # Must = 2*(Hx_bias/increment_size)
-plot_int = 100000
+plot_int = -1
 chk_int = -1
 restart = -1
 diag_type = 2
 Hbias_sweep = 1
 
 prob_lo = 0. 0. 0.
-prob_hi = 600.e-9 120.e-9 12.e-9
+
+# d/l_ex = 12
+prob_hi = 300.e-9 60.e-9 6.e-9
+dt = 5.e-12
 
 mu0 = 1.25663e-6
 
-Mx_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
-My_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
-Mz_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
+Mx_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9)"
+My_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9)"
+Mz_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9)"
 
 # Field Ensemble for hysteresis:  [Hx/Ms= +.08 -> -.08 -> +.08], [Hy/Ms= +.08 -> -.08 -> +.08], mu_0 [Hz/Ms= +.08 -> -.08 -> +.08]
 # which is a field directed about 57 degrees offset from each coordinate axis
 timedependent_Hbias = 0
-Hx_bias_parser(x,y,z,t) = "6.4e-12*1.e16"
-Hy_bias_parser(x,y,z,t) = "6.4e-12*1.e16"
-Hz_bias_parser(x,y,z,t) = "6.4e-12*1.e16"
+Hx_bias_parser(x,y,z,t) = "6.4e4"
+Hy_bias_parser(x,y,z,t) = "6.4e4"
+Hz_bias_parser(x,y,z,t) = "6.4e4"
 
-timedependent_alpha = 1
-alpha_parser(x,y,z,t) =  " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * 0.5"
-Ms_parser(x,y,z) =       " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * 8.e5"
-gamma_parser(x,y,z) =    " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * -1.759e11"
-exchange_parser(x,y,z) = " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)* 1.3e-11"
+timedependent_alpha = 0
+alpha_parser(x,y,z,t) =  " (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9) * 0.5"
+Ms_parser(x,y,z) =       " (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9) * 8.e5"
+gamma_parser(x,y,z) =    " (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9) * -1.759e11"
+exchange_parser(x,y,z) = " (x>0.)*(x<300.e-9)*(y>0.)*(y<60.e-9)*(z>0.)*(z<6.e-9)* 1.005304e-11"
 anisotropy_parser(x,y,z) = "0."
 DMI_parser(x,y,z) = "0."
 
-precession = 1
+precession = 0
 demag_coupling = 1
 FFT_solver = 1
 M_normalization = 1  # 0 = unsaturated case; 1 = saturated case
@@ -47,10 +48,13 @@ anisotropy_axis = 1.0 1.0 1.0
 DMI_coupling = 0
 
 # tolerance for equilibrium in M when Hbias_sweep = 1
-equilibrium_tolerance = 1.e-6
+equilibrium_tolerance = 1.e-9
 
-# for standard problem 2 we step the field from H = 64,000 -> H= -64,000 in 4,000 steps 
+# hysteresis increment for H_bias
 increment_size = 1280
+
+# number of increments ONE WAY: Must = 2*(Hx_bias/increment_size)
+nsteps_hysteresis = 100
 
 # INTEGRATION
 
