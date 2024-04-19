@@ -705,7 +705,7 @@ void main_main ()
                 if (increment_Hbias == 1 && (increment_count == nsteps_hysteresis/2 || increment_count == 3*nsteps_hysteresis/2) ) {
 	            outputFile << "time = " << time << " "
                                << "Hbias_magn = " << Hbias_magn << " "
-                               << "Remenance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
+                               << "Remanance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
                 }
 
 	        if (increment_Hbias == 1) {
@@ -730,13 +730,12 @@ void main_main ()
 		Real exch = 1.e-11; 
 
 	        demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
-                exchange_energy = ExchangeEnergy(Mfield, exch,/* H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange,*/ Ms, geom);		
+                exchange_energy = ExchangeEnergy(Mfield,/* H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange,*/ Ms, geom, exch);		
 		anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], ani);
 
                 demag_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
 		exchange_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
 		anis_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
-
 		total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "

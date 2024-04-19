@@ -145,6 +145,8 @@ Real SumHbias(MultiFab& H_biasfield,
 
     return sum;
 }
+
+/*
 Real AnisotropyEnergy(MultiFab& Ms,
                       MultiFab& Mfield_x,
                       MultiFab& Mfield_y,
@@ -174,7 +176,8 @@ Real AnisotropyEnergy(MultiFab& Ms,
         {
             if (fab(i,j,k) > 0.) {
 		return {(-anis) * (std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2))};
-            } else {
+
+    		} else {
                 return {0.};
             }
         });
@@ -185,6 +188,69 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
     return sum;
 }
+*/
+
+Real AnisotropyEnergy(MultiFab& Ms,
+                      MultiFab& Mfield_x,
+                      MultiFab& Mfield_y,
+                      MultiFab& Mfield_z,
+		      Real anis)
+{
+    // timer for profiling
+    // BL_PROFILE_VAR("SumNormalizedM()",SumNormalizedM);
+
+    ReduceOps<ReduceOpSum> reduce_op;
+    
+    ReduceData<Real> reduce_data(reduce_op);
+
+    using ReduceTuple = typename decltype(reduce_data)::Type;
+
+    for (MFIter mfi(Ms,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        const Box& bx = mfi.tilebox();
+
+        auto const& fab = Ms.array(mfi);
+        auto const& Mx = Mfield_x.array(mfi);
+        auto const& My = Mfield_y.array(mfi);
+        auto const& Mz = Mfield_z.array(mfi);
+
+        reduce_op.eval(bx, reduce_data,
+                       [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+        {
+            if (fab(i,j,k) > 0.) {
+	      /* 
+                std::complex<amrex::Real> M(Mx, My);
+
+		amrex::Real = std::abs(M);
+
+	        amrex::Real cos_theta =(Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2];
+
+                amrex::Real alpha_radians = std::acos(cos_theta);
+
+		amrex::Real alpha = std::abs(alpha_radians) * (180.0 / M_PI);
+
+                return {anis*std::sin(alpha)*std::sin(alpha)};
+             */
+                amrex::Real alpha_radians = atan2(sqrt(std::pow(Mx(i,j,k)/fab(i,j,k),2) + std::pow(Mz(i,j,k)/fab(i,j,k),2)), Mz(i,j,k)/fab(i,j,k));
+	        
+                amrex::Real alpha = alpha_radians * 180.0/ M_PI;
+                
+		return {anis*std::sin(alpha)};
+
+	        // return {(-anis) * (std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2))};
+
+    		} else {
+                return {0.};
+            }
+        });
+    }
+
+    Real sum = amrex::get<0>(reduce_data.value());
+    ParallelDescriptor::ReduceRealSum(sum);
+
+    return sum;
+}
+
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
                   MultiFab& Mfield_y,
@@ -231,7 +297,6 @@ Real DemagEnergy(MultiFab& Ms,
 }
 
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
-                    Real exchange_const,
 		    // Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
 		    /*
 		    MultiFab& Hxx_exchange,
@@ -245,8 +310,9 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
 		    MultiFab& Hzz_exchange,
                     */
 		    MultiFab& Ms,
-		    const Geometry& geom)
-{
+		    const Geometry& geom,
+                    Real exch_const)
+    {
     // timer for profiling
     BL_PROFILE_VAR("CalculateH_exchange()",CalculateH_exchange);
 
@@ -267,18 +333,8 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
         auto const& My = Mfield[1].array(mfi);
         auto const& Mz = Mfield[2].array(mfi);
         auto const& Ms_arr = Ms.array(mfi);
-	/*
-	auto const&  Hxx = Hxx_exchange.array(mfi);
-        auto const&  Hxy = Hxy_exchange.array(mfi);
-        auto const&  Hxz = Hxz_exchange.array(mfi);
-        auto const&  Hyx = Hyx_exchange.array(mfi);
-        auto const&  Hyy = Hyy_exchange.array(mfi);
-        auto const&  Hyz = Hyz_exchange.array(mfi);
-        auto const&  Hzx = Hzx_exchange.array(mfi);
-        auto const&  Hzy = Hzy_exchange.array(mfi);
-        auto const&  Hzz = Hzz_exchange.array(mfi);
-        */
-        reduce_op.eval(bx, reduce_data, [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+
+	reduce_op.eval(bx, reduce_data, [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
 	{
 
  	    // determine if the material is magnetic or not
@@ -349,8 +405,8 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
                             dMzdy_BC_hi_y =  1.0/xi_DMI*My(i,j,k);  // higher y BC: dMz/dy = 1/xi*My
                         }
                         */
+			
 			return{std::pow(Hxx/Ms_arr(i,j,k),2) + std::pow(Hxy/Ms_arr(i,j,k),2) + std::pow( Hxz/Ms_arr(i,j,k),2) + std::pow(Hyx/Ms_arr(i,j,k),2) + std::pow(Hyy/Ms_arr(i,j,k),2) + std::pow(Hyz/Ms_arr(i,j,k),2) + std::pow(Hzx/Ms_arr(i,j,k),2) + std::pow(Hzy/Ms_arr(i,j,k),2) + std::pow(Hzz/Ms_arr(i,j,k),2)};
-
 		} else {
                     return{0.};
                 }
@@ -360,7 +416,7 @@ Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
     Real sum = amrex::get<0>(reduce_data.value());
     ParallelDescriptor::ReduceRealSum(sum);
 
-    return sum*exchange_const;
+    return sum*exch_const;
 }
 
 

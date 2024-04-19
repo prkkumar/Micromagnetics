@@ -1,48 +1,60 @@
 ###
-n_cell = 20 20 20      
-max_grid_size_x = 20
-max_grid_size_y = 20
-max_grid_size_z = 20
+n_cell = 50 10 1
+max_grid_size_x = 50
+max_grid_size_y = 10
+max_grid_size_z = 1
 
-dt = 1.e-13 #MATLAB code uses 5.e-6 nanoseconds
-nsteps = 250000
-plot_int = 1000
+nsteps = 100000000
+plot_int = -1
 chk_int = -1
 restart = -1
-diag_type = 3
+diag_type = 2
+Hbias_sweep = 1
 
 prob_lo = 0. 0. 0.
-prob_hi = 42.4e-9 42.4e-9 42.4e-9
+
+# d/l_ex = 24
+prob_hi = 600.e-9 120.e-9 12.e-9
+dt = 1.e-11
 
 mu0 = 1.25663e-6
 
-Mx_parser(x,y,z) = "8.e5/sqrt(3) * (x>0.)*(x<42.2e-9)*(y>0.)*(y<42.2e-9)*(z>0.)*(z<42.2e-9)"
-My_parser(x,y,z) = "8.e5/sqrt(3) * (x>0.)*(x<42.2e-9)*(y>0.)*(y<42.2e-9)*(z>0.)*(z<42.2e-9)"
-Mz_parser(x,y,z) = "8.e5/sqrt(3) * (x>0.)*(x<42.2e-9)*(y>0.)*(y<42.2e-9)*(z>0.)*(z<42.2e-9)"   #"(8.e5 * (x>0.)*(x<21.1e-9)*(y>0.)*(y<42.2e-9)*(z>0.)*(z<42.2e-9)) - (8.e5 * (x>=21.1e-9)*(x<42.2e-9)*(y>0.)*(y<42.2e-9)*(z>0.)*(z<42.2e-9))"   
+Mx_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
+My_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
+Mz_parser(x,y,z) = "8.e5/sqrt(3.) * (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)"
 
+# Field Ensemble for hysteresis:  [Hx/Ms= +.08 -> -.08 -> +.08], [Hy/Ms= +.08 -> -.08 -> +.08], mu_0 [Hz/Ms= +.08 -> -.08 -> +.08]
+# which is a field directed about 57 degrees offset from each coordinate axis
 timedependent_Hbias = 0
-Hx_bias_parser(x,y,z,t) = "0."
-Hy_bias_parser(x,y,z,t) = "0."
-Hz_bias_parser(x,y,z,t) = "0."
+Hx_bias_parser(x,y,z,t) = "6.4e4"
+Hy_bias_parser(x,y,z,t) = "6.4e4"
+Hz_bias_parser(x,y,z,t) = "6.4e4"
 
-# We derive exchange parser from the dimensionless L/l_ex 
-# increasing the domain size L we see a new domain pattern form at a certain threshold
 timedependent_alpha = 0
-alpha_parser(x,y,z,t) =  " (x>0.)*(x<42.4e-9)*(y>0.)*(y<42.4e-9)*(z>0.)*(z<42.4e-9) * 0.3"
-Ms_parser(x,y,z) =       " (x>0.)*(x<42.4e-9)*(y>0.)*(y<42.4e-9)*(z>0.)*(z<42.4e-9) * 8.e5"
-gamma_parser(x,y,z) =    " (x>0.)*(x<42.4e-9)*(y>0.)*(y<42.4e-9)*(z>0.)*(z<42.4e-9) * -1.759e11"
-exchange_parser(x,y,z) = " (x>0.)*(x<42.4e-9)*(y>0.)*(y<42.4e-9)*(z>0.)*(z<42.4e-9)* 1.e-11"
-anisotropy_parser(x,y,z) = " (x>0.)*(x<42.4e-9)*(y>0.)*(y<42.4e-9)*(z>0.)*(z<42.4e-9)* 3.9788736e4"
+alpha_parser(x,y,z,t) =  " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * 0.5"
+Ms_parser(x,y,z) =       " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * 8.e5"
+gamma_parser(x,y,z) =    " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9) * -1.759e11"
+exchange_parser(x,y,z) = " (x>0.)*(x<600.e-9)*(y>0.)*(y<120.e-9)*(z>0.)*(z<12.e-9)* 1.005304e-11"
+anisotropy_parser(x,y,z) = "0."
 DMI_parser(x,y,z) = "0."
 
-precession = 1 
+precession = 0
 demag_coupling = 1
 FFT_solver = 1
 M_normalization = 1  # 0 = unsaturated case; 1 = saturated case
 exchange_coupling = 1
-anisotropy_coupling = 1
-anisotropy_axis = 0.0 0.0 1.0
+anisotropy_coupling = 0
+anisotropy_axis = 1.0 1.0 1.0
 DMI_coupling = 0
+
+# tolerance for equilibrium in M when Hbias_sweep = 1
+equilibrium_tolerance = 1.e-9
+
+# hysteresis increment for H_bias
+increment_size = 1280
+
+# number of increments ONE WAY: Must = 2*(Hx_bias/increment_size)
+nsteps_hysteresis = 100
 
 # INTEGRATION
 
