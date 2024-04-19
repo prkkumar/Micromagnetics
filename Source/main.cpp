@@ -204,7 +204,6 @@ void main_main ()
     Real exchange_energy;
     Real anis_energy;
 
-
     amrex::Print() << "==================== Initial Setup ====================\n";
     amrex::Print() << " precession           = " << precession          << "\n";
     amrex::Print() << " demag_coupling       = " << demag_coupling      << "\n";
@@ -725,14 +724,19 @@ void main_main ()
 		Real anis_energy = Energy_Density(H_anisotropyfield[0], H_anisotropyfield[1], H_anisotropyfield[2], Ms);
                 */
 
-                int comp=0;
-                Real ani = anisotropy.max(comp);
+                // int comp=0;
+                // Real ani = anisotropy.max(comp);
+		Real ani = 3.9788736e4;
+		Real exch = 1.e-11; 
 
 	        demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
-                exchange_energy = ExchangeEnergy(Mfield, H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange, Ms, geom);		
+                exchange_energy = ExchangeEnergy(Mfield, exch,/* H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange,*/ Ms, geom);		
 		anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], ani);
 
-		
+                demag_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
+		exchange_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
+		anis_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
+
 		total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "

@@ -78,16 +78,19 @@ Real Energy_Density(MultiFab& Coupling_Mechanism_x,
                     MultiFab& Coupling_Mechanism_z,
                     MultiFab& Ms);
 Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
-                    Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
+                    Real exchange_const,
+                    // Array< MultiFab, AMREX_SPACEDIM>& H_exchangefield,
+                    /*
                     MultiFab& Hxx_exchange,
                     MultiFab& Hxy_exchange,
                     MultiFab& Hxz_exchange,
                     MultiFab& Hyx_exchange,
                     MultiFab& Hyy_exchange,
-		    MultiFab& Hyz_exchange,
+                    MultiFab& Hyz_exchange,
                     MultiFab& Hzx_exchange,
                     MultiFab& Hzy_exchange,
                     MultiFab& Hzz_exchange,
+                    */
                     MultiFab& Ms,
                     const Geometry& geom);
 Real DemagEnergy(MultiFab& Ms,
