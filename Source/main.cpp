@@ -706,7 +706,7 @@ void main_main ()
                 if (increment_Hbias == 1 && (increment_count == nsteps_hysteresis/2 || increment_count == 3*nsteps_hysteresis/2) ) {
 	            outputFile << "time = " << time << " "
                                << "Hbias_magn = " << Hbias_magn << " "
-                               << "Remenance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
+                               << "Remanance = " << normalized_Mx/num_mag << " " << normalized_My/num_mag << " " << normalized_Mz/num_mag << std::endl;
                 }
 
 	        if (increment_Hbias == 1) {
