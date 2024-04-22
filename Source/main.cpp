@@ -733,9 +733,9 @@ void main_main ()
                 exchange_energy = ExchangeEnergy(Mfield,/* H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange,*/ Ms, geom, exch);		
 		anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], ani);
 
-                demag_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
-		exchange_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
-		anis_energy /= .5*1.25663e-6*(std::pow(8.e+4,2));
+                demag_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
+		exchange_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
+		anis_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
 		total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "
