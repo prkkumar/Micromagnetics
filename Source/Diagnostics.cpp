@@ -230,14 +230,14 @@ Real AnisotropyEnergy(MultiFab& Ms,
 		amrex::Real alpha = std::abs(alpha_radians) * (180.0 / M_PI);
 
                 return {anis*std::sin(alpha)*std::sin(alpha)};
-             */
+             
                 amrex::Real alpha_radians = atan2(sqrt(std::pow(Mx(i,j,k)/fab(i,j,k),2) + std::pow(Mz(i,j,k)/fab(i,j,k),2)), Mz(i,j,k)/fab(i,j,k));
 	        
                 amrex::Real alpha = alpha_radians * 180.0/ M_PI;
                 
 		return {anis*std::sin(alpha)};
-
-	        // return {(-anis) * (std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2))};
+               */
+	        return {1.-(std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2))};
 
     		} else {
                 return {0.};
@@ -248,7 +248,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
     Real sum = amrex::get<0>(reduce_data.value());
     ParallelDescriptor::ReduceRealSum(sum);
 
-    return sum;
+    return sum * (anis);
 }
 
 Real DemagEnergy(MultiFab& Ms,
