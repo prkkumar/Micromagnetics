@@ -22,6 +22,9 @@ amrex::Real MagneX::stop_time;
 // number of increments on Hbias before reversing sign of increment
 int MagneX::nsteps_hysteresis;
 
+// flag to end simulation if steady-state reached, steady_state = 1 will end LLG evolution
+int MagneX::steady_stop;
+
 // 1 = first order forward Euler
 // 2 = iterative predictor-corrector
 // 3 = iterative direct solver
@@ -134,6 +137,9 @@ void InitializeMagneXNamespace() {
 
     nsteps_hysteresis = 1000000000;
     pp.query("nsteps_hysteresis",nsteps_hysteresis);
+
+    steady_stop = 0;
+    pp.query("steady_stop",steady_stop);
 
     equilibrium_tolerance = 1.e-6;
     pp.query("equilibrium_tolerance",equilibrium_tolerance);

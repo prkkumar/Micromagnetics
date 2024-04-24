@@ -62,25 +62,9 @@ long CountMagneticCells(MultiFab& Ms);
 Real SumNormalizedM(MultiFab& Ms,
                     MultiFab& Mfield);
 
-Real SumHeff(MultiFab& H_demagfield,
-             MultiFab& H_exchangefield,
-             MultiFab& H_biasfield);
-Real AnisotropyEnergy(MultiFab& Ms,
-                      MultiFab& Mfield_x,
-                      MultiFab& Mfield_y,
-                      MultiFab& Mfield_z,
-                      Real anis);
 Real SumHbias(MultiFab& H_biasfield,
 	      MultiFab& Ms);
 
-Real Energy_Density(MultiFab& Coupling_Mechanism_x,
-                    MultiFab& Coupling_Mechanism_y,
-                    MultiFab& Coupling_Mechanism_z,
-                    MultiFab& Ms);
-Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
-                    MultiFab& Ms,
-                    const Geometry& geom,
-		    Real exch_const);
 Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Mfield_x,
                   MultiFab& Mfield_y,
@@ -89,6 +73,16 @@ Real DemagEnergy(MultiFab& Ms,
                   MultiFab& Demagfield_y,
                   MultiFab& Demagfield_z);
 
+Real ExchangeEnergy(Array< MultiFab, AMREX_SPACEDIM>& Mfield,
+                    MultiFab& Ms,
+                    const Geometry& geom,
+		    Real exch_const);
+
+Real AnisotropyEnergy(MultiFab& Ms,
+                      MultiFab& Mfield_x,
+                      MultiFab& Mfield_y,
+                      MultiFab& Mfield_z,
+                      Real anis);
 /*
   EffectiveAnisotropyField.cpp
 */

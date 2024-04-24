@@ -67,7 +67,7 @@ void main_main ()
     Array<MultiFab, AMREX_SPACEDIM> LLG_RHS_pre;
     Array<MultiFab, AMREX_SPACEDIM> LLG_RHS_avg;
 
-    // Declare variables for reaching equilibrium before evolving Hbias
+    // Declare variables for hysteresis
     Real normalized_Mx;
     Real normalized_My;
     Real normalized_Mz;
@@ -93,6 +93,13 @@ void main_main ()
 
     // Count how many times we have incremented Hbias
     int increment_count = 0;
+
+    Real total_energy;
+    Real demag_energy;
+    Real exchange_energy;
+    Real anis_energy;
+
+    int steady = 0;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -188,22 +195,7 @@ void main_main ()
     MultiFab exchange(ba, dm, 1, 0);
     MultiFab DMI(ba, dm, 1, 0);
     MultiFab anisotropy(ba, dm, 1, 0);
-
-    MultiFab Hxx_exchange(ba, dm, 1, 0);
-    MultiFab Hxy_exchange(ba, dm, 1, 0);
-    MultiFab Hxz_exchange(ba, dm, 1, 0);
-    MultiFab Hyx_exchange(ba, dm, 1, 0);
-    MultiFab Hyy_exchange(ba, dm, 1, 0);
-    MultiFab Hyz_exchange(ba, dm, 1, 0);
-    MultiFab Hzx_exchange(ba, dm, 1, 0);
-    MultiFab Hzy_exchange(ba, dm, 1, 0);
-    MultiFab Hzz_exchange(ba, dm, 1, 0);
-
-    Real total_energy;
-    Real demag_energy;
-    Real exchange_energy;
-    Real anis_energy;
-
+ 
     amrex::Print() << "==================== Initial Setup ====================\n";
     amrex::Print() << " precession           = " << precession          << "\n";
     amrex::Print() << " demag_coupling       = " << demag_coupling      << "\n";
@@ -232,7 +224,14 @@ void main_main ()
     InitializeMagneticProperties(alpha, Ms, gamma, exchange, DMI, anisotropy, geom, time);
     ComputeHbias(H_biasfield, time, geom);
 
+    // Extract anisotropy and exchange constants
+    int comp=0;
+    Real ani = anisotropy.max(comp);
+    comp=0;
+    Real exch = exchange.max(comp);
 
+    // Magnetostatic energy density in SI
+    Real Km =.5*mu0*(std::pow(8.e5,2));
 
     // count how many magnetic cells are in the domain
     long num_mag = CountMagneticCells(Ms);
@@ -657,7 +656,7 @@ void main_main ()
 
             // Check if field is equilibirated
 	    // If so, we will increment Hbias 
-            if ((Hbias_sweep == 1) && (step > 1)) {
+            if ((Hbias_sweep == 1 || steady_stop == 1) && (step > 1)) {
 	    
 	        err_x = amrex::Math::abs((normalized_Mx/num_mag) - normalized_Mx_old);
 	        err_y = amrex::Math::abs((normalized_My/num_mag) - normalized_My_old);
@@ -675,8 +674,12 @@ void main_main ()
 	        normalized_Mz_old = normalized_Mz/num_mag;
 
 	        if ((err_x < equilibrium_tolerance) && (err_y < equilibrium_tolerance) && (err_z < equilibrium_tolerance)) {
-	            increment_Hbias = 1;
-
+	            if (Hbias_sweep == 1) {
+		        increment_Hbias = 1;
+		    }
+		    if (steady_stop == 1 && step >= 1000) {
+		        steady = 1;
+		    }
                     // Reset the error
 	            normalized_Mx_old = 0.;
 		    normalized_My_old = 0.;
@@ -718,24 +721,14 @@ void main_main ()
 	    // standard problem 3 diagnostics
             if (diag_type == 3) {
 
-    		/*
-		Real demag_energy = Energy_Density(H_demagfield[0], H_demagfield[1], H_demagfield[2], Ms);
-		Real exchange_energy = Energy_Density(H_exchangefield[0], H_exchangefield[1], H_exchangefield[2], Ms);
-		Real anis_energy = Energy_Density(H_anisotropyfield[0], H_anisotropyfield[1], H_anisotropyfield[2], Ms);
-                */
-
-                // int comp=0;
-                // Real ani = anisotropy.max(comp);
-		Real ani = 3.9788736e4;
-		Real exch = 1.e-11; 
-
-	        demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
-                exchange_energy = ExchangeEnergy(Mfield,/* H_exchangefield, Hxx_exchange, Hxy_exchange, Hxz_exchange, Hyx_exchange, Hyy_exchange, Hyz_exchange, Hzx_exchange,Hzy_exchange, Hzz_exchange,*/ Ms, geom, exch);		
+    		demag_energy = DemagEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], H_demagfield[0], H_demagfield[1], H_demagfield[2]);
+                exchange_energy = ExchangeEnergy(Mfield, Ms, geom, exch);		
 		anis_energy = AnisotropyEnergy(Ms, Mfield[0], Mfield[1], Mfield[2], ani);
 
-                demag_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
-		exchange_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
-		anis_energy /= .5*1.25663e-6*(std::pow(8.e5,2))*num_mag;
+                demag_energy /= Km*num_mag;
+		exchange_energy /= Km*num_mag;
+		anis_energy /= Km*num_mag;
+		
 		total_energy = anis_energy + exchange_energy + demag_energy;
 	    
 	        outputFile << "time = " << time << " "
@@ -792,6 +785,11 @@ void main_main ()
         if (increment_Hbias == 1 && increment_count == 2*nsteps_hysteresis) {
             break;
         }
+
+	// If we have reached a steady-state and have steady_stop == 1, we end simulation 
+	if (steady_stop == 1 && steady == 1) {
+	    break;
+	}
 
         if (time > stop_time) {
             amrex::Print() << "Stop time reached\n";

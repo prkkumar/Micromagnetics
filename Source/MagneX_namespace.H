@@ -20,6 +20,9 @@ namespace MagneX {
     // number of increments on Hbias before reversing sign of increment
     extern int nsteps_hysteresis;
 
+    // flag to end simulation if steady-state reached, steady_state = 1 will end LLG evolution
+    extern int steady_stop;
+
     // 1 = first order forward Euler
     // 2 = iterative predictor-corrector
     // 3 = iterative direct solver
