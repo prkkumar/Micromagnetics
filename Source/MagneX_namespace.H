@@ -17,17 +17,11 @@ namespace MagneX {
 
     extern amrex::Real stop_time;
 
-    extern int nsteps_hysteresis;
+    extern amrex::Real dt;
 
     extern int TimeIntegratorOption;
 
     extern amrex::Real iterative_tolerance;
-
-    extern amrex::Real equilibrium_tolerance;
-
-    extern AMREX_GPU_MANAGED amrex::Real increment_size;
-
-    extern amrex::Real dt;
 
     extern int plot_int;
 
@@ -44,26 +38,25 @@ namespace MagneX {
 
     extern int diag_type;
 
+    extern int timedependent_Hbias;
+    extern int timedependent_alpha;
+
     extern int Hbias_sweep;
+
+    extern amrex::Real equilibrium_tolerance;
+
+    extern AMREX_GPU_MANAGED amrex::Real increment_size;
+
+    extern int nsteps_hysteresis;
 
     extern AMREX_GPU_MANAGED amrex::Real mu0;
 
-    extern int timedependent_Hbias;
-    extern int timedependent_alpha;
-    
-    extern AMREX_GPU_MANAGED int precession;
-    
-    extern AMREX_GPU_MANAGED int demag_coupling;
-
-    extern AMREX_GPU_MANAGED int FFT_solver;
-
     extern AMREX_GPU_MANAGED int M_normalization;
-
+    extern AMREX_GPU_MANAGED int precession;
     extern AMREX_GPU_MANAGED int exchange_coupling;
-
     extern AMREX_GPU_MANAGED int DMI_coupling;
-
     extern AMREX_GPU_MANAGED int anisotropy_coupling;
     extern AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, 3> anisotropy_axis; 
-
+    extern AMREX_GPU_MANAGED int demag_coupling;
+    extern AMREX_GPU_MANAGED int FFT_solver;
 }
