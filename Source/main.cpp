@@ -217,7 +217,9 @@ void main_main ()
         demag_solver.define();       
     }
 
-    InitializeMagneticProperties(alpha, Ms, gamma, exchange, DMI, anisotropy, geom, time);
+    // read in Ms, gamma, exchange, DMI, anisotropy, alpha, and Hbias from parser
+    InitializeMagneticProperties(Ms, gamma, exchange, DMI, anisotropy, geom, time);
+    ComputeAlpha(alpha,geom,time);
     ComputeHbias(H_biasfield, time, geom);
 
     // Extract anisotropy and exchange constants
@@ -233,7 +235,8 @@ void main_main ()
     long num_mag = CountMagneticCells(Ms);
     
     if (restart == -1) {      
-        //Initialize fields
+
+        // read in M from parser
         InitializeFields(Mfield, geom);
 
         if (demag_coupling == 1) {
