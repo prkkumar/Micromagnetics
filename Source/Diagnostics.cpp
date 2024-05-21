@@ -286,7 +286,7 @@ Real AnisotropyEnergy(MultiFab& Ms,
 
         const Box& bx = mfi.tilebox();
 
-        auto const& fab = Ms.array(mfi);
+        auto const& Ms_arr = Ms.array(mfi);
         auto const& Mx = Mfield_x.array(mfi);
         auto const& My = Mfield_y.array(mfi);
         auto const& Mz = Mfield_z.array(mfi);
@@ -294,8 +294,8 @@ Real AnisotropyEnergy(MultiFab& Ms,
         reduce_op.eval(bx, reduce_data,
                        [=] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         {
-            if (fab(i,j,k) > 0.) {
-	        return {1.-(std::pow(((Mx(i,j,k)/fab(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/fab(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/fab(i,j,k))*anisotropy_axis[2]), 2))};
+            if (Ms_arr(i,j,k) > 0.) {
+	        return {1.-(std::pow(((Mx(i,j,k)/Ms_arr(i,j,k))*anisotropy_axis[0] + (My(i,j,k)/Ms_arr(i,j,k))*anisotropy_axis[1] + (Mz(i,j,k)/Ms_arr(i,j,k))*anisotropy_axis[2]), 2))};
 
     	    } else {
                 return {0.};
