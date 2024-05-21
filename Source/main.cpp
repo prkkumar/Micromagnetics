@@ -76,11 +76,9 @@ void main_main ()
     Real normalized_My_old = 0.;
     Real normalized_Mz_old = 0.;
 
-    // Initialize err to some arbitrary value greater then tol
-    Real err = equilibrium_tolerance + 1.0;
-    Real err_x = equilibrium_tolerance + 1.0;
-    Real err_y = equilibrium_tolerance + 1.0;
-    Real err_z = equilibrium_tolerance + 1.0;
+    Real err_x;
+    Real err_y;
+    Real err_z;
 
     int increment_Hbias = 0;
 
@@ -98,8 +96,6 @@ void main_main ()
     Real demag_energy;
     Real exchange_energy;
     Real anis_energy;
-
-    int steady = 0;
 
     BoxArray ba;
     DistributionMapping dm;
@@ -656,7 +652,7 @@ void main_main ()
 
             // Check if field is equilibirated
 	    // If so, we will increment Hbias 
-            if ((Hbias_sweep == 1 || steady_stop == 1) && (step > 1)) {
+            if (Hbias_sweep == 1 && step > 1) {
 	    
 	        err_x = amrex::Math::abs((normalized_Mx/num_mag) - normalized_Mx_old);
 	        err_y = amrex::Math::abs((normalized_My/num_mag) - normalized_My_old);
@@ -677,9 +673,7 @@ void main_main ()
 	            if (Hbias_sweep == 1) {
 		        increment_Hbias = 1;
 		    }
-		    if (steady_stop == 1 && step >= 1000) {
-		        steady = 1;
-		    }
+
                     // Reset the error
 	            normalized_Mx_old = 0.;
 		    normalized_My_old = 0.;
@@ -785,11 +779,6 @@ void main_main ()
         if (increment_Hbias == 1 && increment_count == 2*nsteps_hysteresis) {
             break;
         }
-
-	// If we have reached a steady-state and have steady_stop == 1, we end simulation 
-	if (steady_stop == 1 && steady == 1) {
-	    break;
-	}
 
         if (time > stop_time) {
             amrex::Print() << "Stop time reached\n";
