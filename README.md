@@ -10,8 +10,9 @@ Make sure that AMReX and MagneX are cloned at the same root location. \
 ``` >> git clone https://github.com/AMReX-Codes/amrex.git ``` \
 ``` >> git clone https://AMReX-Microelectronics/MagneX.git ```
 ## Dependencies
-Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev, libfftw3-mpi-dev, and cmake are required.
-Also heFFTe is required.  At the same level that AMReX and MagneX are cloned, run: \
+Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev, libfftw3-mpi-dev, and cmake are required.\
+SUNDIALS is optional an enabled Runge-Kutta, implicit, and multirate integrators (more detailed instructions in the full documentation).\
+heFFTe is required.  At the same level that AMReX and MagneX are cloned, run: \
 ``` >> git clone https://github.com/icl-utk-edu/heffte.git ```\
 ``` >> cd heffte ```\
 ``` >> mkdir build ```\
