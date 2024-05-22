@@ -7,28 +7,27 @@ The algorithm is implemented using Exascale Computing Project software framework
 Here are instructions for a basic, pure-MPI (no GPU) installation.  More detailed instructions for GPU systems are in the full documentation.
 ## Download AMReX and MagneX Repositories
 Make sure that AMReX and MagneX are cloned at the same root location. \
-``` git clone https://github.com/AMReX-Codes/amrex.git ``` \
-``` git clone https://AMReX-Microelectronics/MagneX.git ```
+``` >> git clone https://github.com/AMReX-Codes/amrex.git ``` \
+``` >> git clone https://AMReX-Microelectronics/MagneX.git ```
 ## Dependencies
 Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev, libfftw3-mpi-dev, and cmake are required.
 Also heFFTe is required.  At the same level that AMReX and MagneX are cloned, run: \
-``` git clone https://github.com/icl-utk-edu/heffte.git ```\
-``` cd heffte ```\
-``` mkdir build ```\
-``` cd build ```\
-``` cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=. -DHeffte_ENABLE_FFTW=ON -DHeffte_ENABLE_CUDA=OFF .. ```\
-``` make -j4 ```\
-``` make install```
+``` >> git clone https://github.com/icl-utk-edu/heffte.git ```\
+``` >> cd heffte ```\
+``` >> mkdir build ```\
+``` >> cd build ```\
+``` >> cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=. -DHeffte_ENABLE_FFTW=ON -DHeffte_ENABLE_CUDA=OFF .. ```\
+``` >> make -j4 ```\
+``` >> make install```
 ## Build
- Navigate to the Exec folder of MagneX and execute
-```make -j 4```
+ Navigate to MagneX/Exec/ and run:\
+```>> make -j4```
 
 # Running MagneX
 Example input scripts are located in `Exec/standard_problem_inputs/` directory. 
 ## Simple Testcase
-You can run the following to simulate muMAG Standard Problem 4 dynamics:
-## For pure MPI build (but with a single MPI rank)
-```./main3d.gnu.MPI.ex standard_problem_inputs/inputs_std4```
+You can run the following to simulate muMAG Standard Problem 4 dynamics:\
+```>> ./main3d.gnu.MPI.ex standard_problem_inputs/inputs_std4```
 # Visualization and Data Analysis
 Refer to the following link for several visualization tools that can be used for AMReX plotfiles. 
 
@@ -38,9 +37,9 @@ Refer to the following link for several visualization tools that can be used for
 You can extract the data in numpy array format using yt (you can refer to this for installation and usage of [yt](https://yt-project.org/). After you have installed yt, you can do something as follows, for example, to get variable 'Pz' (z-component of polarization)
 ```
 import yt
-ds = yt.load('./plt00001000/') # for data at time step 1000
+ds = yt.load('./plt00010000/') # for data at time step 10000
 ad0 = ds.covering_grid(level=0, left_edge=ds.domain_left_edge, dims=ds.domain_dimensions)
-P_array = ad0['Pz'].to_ndarray()
+Px_array = ad0['Mx'].to_ndarray()
 ```
 # Publications
 1. Z. Yao, P. Kumar, J. C. LePelch, and A. Nonaka, MagneX: An Exascale-Enabled Micromagnetics Solver for Spintronic Systems, in preparation.
