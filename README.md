@@ -2,7 +2,8 @@
 MagneX is a massively parallel, 3D micromagnetics solver for modeling magnetic materials.
 MagneX solves the Landau-Lifshitz-Gilbert (LLG) equations, including exchange, anisotropy, demagnetization, and Dzyaloshinskii-Moriya interaction (DMI) coupling.
 The algorithm is implemented using Exascale Computing Project software framework, AMReX, which provides effective scalability on manycore and GPU-based supercomputing architectures.
-
+# Getting Help
+Our community is here to help. Please report installation problems or general questions about the code in the github [Issues](https://github.com/AMReX-Microelectronics/MagneX/issues) tab above.
 # Installation
 Here are instructions for a basic, pure-MPI (no GPU) installation.  More detailed instructions for GPU systems are in the full documentation.
 ## Download AMReX and MagneX Repositories
