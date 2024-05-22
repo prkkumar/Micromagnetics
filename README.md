@@ -4,12 +4,15 @@ MagneX solves the Landau-Lifshitz-Gilbert (LLG) equations, including exchange, a
 The algorithm is implemented using Exascale Computing Project software framework, AMReX, which provides effective scalability on manycore and GPU-based supercomputing architectures.
 
 # Installation
-## Download AMReX Repository
+## Download AMReX and MagneX Repositories
+Make sure that AMReX and MagneX are cloned at the same root location.
 ``` git clone git@github.com:AMReX-Codes/amrex.git ```
-## Download MagneX Repository
-``` git@github.com:AMReX-Microelectronics/MagneX.git ```
+``` git clone git@github.com:AMReX-Microelectronics/MagneX.git ```
+## Dependencies
+Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev and libfftw3-mpi-dev are required.
+Also heFFTe is required.
 ## Build
-Make sure that the AMReX and MagneX are cloned in the same location in their filesystem. Navogate to the Exec folder of MagneX and execute
+ Navogate to the Exec folder of MagneX and execute
 ```make -j 4```
 
 # Running MagneX
