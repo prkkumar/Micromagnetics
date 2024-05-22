@@ -25,8 +25,6 @@ heFFTe is required.  At the same level that AMReX and MagneX are cloned, run: \
 ```>> make -j4```
 
 # Running MagneX
-Example input scripts are located in `Exec/standard_problem_inputs/` directory. 
-## Simple Testcase
 You can run the following to simulate muMAG Standard Problem 4 dynamics:\
 ```>> ./main3d.gnu.MPI.ex standard_problem_inputs/inputs_std4```
 # Visualization and Data Analysis
