@@ -5,8 +5,8 @@ The algorithm is implemented using Exascale Computing Project software framework
 
 # Installation
 ## Download AMReX and MagneX Repositories
-Make sure that AMReX and MagneX are cloned at the same root location.
-``` git clone git@github.com:AMReX-Codes/amrex.git ```
+Make sure that AMReX and MagneX are cloned at the same root location. \
+``` git clone git@github.com:AMReX-Codes/amrex.git ``` \
 ``` git clone git@github.com:AMReX-Microelectronics/MagneX.git ```
 ## Dependencies
 Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev and libfftw3-mpi-dev are required.
