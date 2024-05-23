@@ -3,6 +3,10 @@ MagneX is a massively parallel, 3D micromagnetics solver for modeling magnetic m
 MagneX solves the Landau-Lifshitz-Gilbert (LLG) equations, including exchange, anisotropy, demagnetization, and Dzyaloshinskii-Moriya interaction (DMI) coupling.
 The algorithm is implemented using Exascale Computing Project software framework, AMReX, which provides effective scalability on manycore and GPU-based supercomputing architectures.
 
+# Documentation and Getting Help
+More extensive documentation is available [HERE](https://amrex-microelectronics.github.io).
+Our community is here to help. Please report installation problems or general questions about the code in the github [Issues](https://github.com/AMReX-Microelectronics/MagneX/issues) tab above.
+
 # Installation
 Here are instructions for a basic, pure-MPI (no GPU) installation.  More detailed instructions for GPU systems are in the full documentation.
 ## Download AMReX and MagneX Repositories
@@ -11,8 +15,8 @@ Make sure that AMReX and MagneX are cloned at the same root location. \
 ``` >> git clone https://AMReX-Microelectronics/MagneX.git ```
 ## Dependencies
 Beyond a standard Ubuntu22 installation, the Ubuntu packages libfftw3-dev, libfftw3-mpi-dev, and cmake are required.\
-SUNDIALS is optional an enabled Runge-Kutta, implicit, and multirate integrators (more detailed instructions in the full documentation).\
-heFFTe is required.  At the same level that AMReX and MagneX are cloned, run: \
+SUNDIALS is optional and enables Runge-Kutta, implicit, and multirate integrators (more detailed instructions in the full documentation).\
+heFFTe is a required dependency.  At the same level that AMReX and MagneX are cloned, run: \
 ``` >> git clone https://github.com/icl-utk-edu/heffte.git ```\
 ``` >> cd heffte ```\
 ``` >> mkdir build ```\
