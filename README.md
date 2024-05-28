@@ -35,12 +35,12 @@ Refer to the following link for several visualization tools that can be used for
 [Visualization](https://amrex-codes.github.io/amrex/docs_html/Visualization_Chapter.html)
 
 ### Data Analysis in Python using yt 
-You can extract the data in numpy array format using yt (you can refer to this for installation and usage of [yt](https://yt-project.org/). After you have installed yt, you can do something as follows, for example, to get variable 'Pz' (z-component of polarization)
+You can extract the data in numpy array format using yt (you can refer to this for installation and usage of [yt](https://yt-project.org/). After you have installed yt, you can do something as follows, for example, to get variable 'Mx' (x-component of magnetization)
 ```
 import yt
 ds = yt.load('./plt00010000/') # for data at time step 10000
 ad0 = ds.covering_grid(level=0, left_edge=ds.domain_left_edge, dims=ds.domain_dimensions)
-Px_array = ad0['Mx'].to_ndarray()
+Mx_array = ad0['Mx'].to_ndarray()
 ```
 # Publications
 1. Z. Yao, P. Kumar, J. C. LePelch, and A. Nonaka, MagneX: An Exascale-Enabled Micromagnetics Solver for Spintronic Systems, in preparation.
